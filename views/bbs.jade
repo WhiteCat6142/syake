@@ -1,0 +1,11 @@
+html
+  head
+    title #{title}
+  body
+    h1 bbs
+    form(method="post",action="/test/bbs.cgi")
+     input(type="text",name="content")
+     input(type="submit",value="add")
+    ul
+     each msg in messages
+      li= msg.content
