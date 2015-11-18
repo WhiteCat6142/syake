@@ -6,9 +6,11 @@
     "start": "node app"
   },
   "dependencies": {
+    "body-parser": "*",
+    "compression": "*",
+    "crypto": "0.0.3",
     "express": "4.*",
     "jade": "*",
-    "compression":"*",
-    "sqlite3":"*"
+    "sqlite3": "*"
   }
 }

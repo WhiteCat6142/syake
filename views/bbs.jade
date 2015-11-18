@@ -2,9 +2,13 @@ html
   head
     title #{title}
   body
-    h1 bbs
+    h1 #{title}
     form(method="post",action="/test/bbs.cgi")
-     input(type="text",name="content")
+     input(type="hidden",value="post",name="cmd")
+     input(type="hidden",value=file,name="file")
+     input(type="text",name="mail")
+     input(type="text",name="name")
+     textarea(name="body")
      input(type="submit",value="add")
     ul
      each msg in messages

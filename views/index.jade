@@ -3,11 +3,11 @@
     meta(charset="utf-8")
     title 新月
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    link(rel="stylesheet" type="text/css" href="/bootstrap.min.css")
-    link(rel="stylesheet" type="text/css" href="/__merged.css")
+    link(rel="stylesheet" type="text/css" href="/gateway.cgi/bootstrap.min.css")
+    link(rel="stylesheet" type="text/css" href="/gateway.cgi/__merged.css")
   body
-    aside#header.navbar-collapse
-     ul.nav.navbar-nav
+    header.nav.navbar-nav
+     ul
       li
        a(href="/") トップ
       li
@@ -15,7 +15,7 @@
       li
        a(href="http://www.shingetsu.info/") 公式サイト
       li
-       a(href="/gateway.cgi/motd") ネットワーク利用規約
+       a(href="/gateway.cgi/motd") 利用規約
       li
        a(href="/2ch/subject.txt") 2chブラウザ
       li
@@ -30,4 +30,4 @@
      ul
        each thread in threads
          li
-           a(href=thread.link) #{thread.title} (#{thread.num})
+           a(href="/thread.cgi/"+thread.title) #{thread.title} (#{thread.records})
