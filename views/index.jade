@@ -1,25 +1,6 @@
-﻿html
-  head
-    meta(charset="utf-8")
-    title 新月
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    link(rel="stylesheet" type="text/css" href="/gateway.cgi/bootstrap.min.css")
-    link(rel="stylesheet" type="text/css" href="/gateway.cgi/__merged.css")
-  body
-    header.nav.navbar-nav
-     ul
-      li
-       a(href="/") トップ
-      li
-       a(href="/gateway.cgi/changes") 最終更新
-      li
-       a(href="http://www.shingetsu.info/") 公式サイト
-      li
-       a(href="/gateway.cgi/motd") 利用規約
-      li
-       a(href="/2ch/subject.txt") 2chブラウザ
-      li
-       a(href="/gateway.cgi/rss") RSS
+﻿extends base
+
+block content
     .container
      h1 新月
      h2 タグ
@@ -31,3 +12,10 @@
        each thread in threads
          li
            a(href="/thread.cgi/"+thread.title) #{thread.title} (#{thread.records})
+     a(href="/gateway.cgi/changes") 最終更新
+     h2 リンク
+      ul
+       li
+        a(href="http://www.shingetsu.info/") 公式サイト
+       li
+        a(href="/2ch/subject.txt") 2chブラウザ

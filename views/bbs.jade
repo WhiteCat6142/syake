@@ -1,10 +1,12 @@
-html
-  head
-    title #{title}
-  body
-    h1 #{title}
+extends base
+
+block append scripts
+ script(type="text/javascript").
+  window.onload=function(){document.getElementById("cmd").value="post";};
+
+block content
     form(method="post",action="/test/bbs.cgi")
-     input(type="hidden",value="post",name="cmd")
+     input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")
      input(type="text",name="mail")
      input(type="text",name="name")
