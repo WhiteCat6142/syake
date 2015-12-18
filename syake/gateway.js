@@ -1,35 +1,49 @@
-var api = require('./api');
-
+var api = require('./api2');
+var cache = require('memory-cache');
 var escape = require('escape-html');
 
 var tags =["a","b","c"];
-exports.index = function(req, res) {
- api.threads("limit 15",function(threads) {
+function index(req, res) {
+ api.threads.get({limit:15,sort:true}).then(api.addDate).then(function(threads) {
   res.render('index',{threads:threads,tags:tags});
  });
-};
-exports.changes= function(req, res) {console.log(req.query.tag);
- api.threads("",function(threads) {
+}
+function changes(req, res) {
+ api.threads.get({sort:true,tag:req.query.tag}).then(api.addDate).then(function(threads) {
   res.render('index',{threads:threads,tags:tags});
  });
-};
+}
 
-
-exports.thread = function(req, res){
+function thread(req, res){
  var title = req.params.id;
- var file = api.threadfile(title);
- api.get(file,"limit 30",function(err,rows) {
-  if(!err)res.render('bbs', { title: title, messages: rows,file: file});
- });
-};
+ api.threads.info({title:title}).then(function(row){
+   var file = row.file;
+   api.thread.get(file,{}).then(api.addDate)
+   .then(function(rows){res.render('bbs', { title: title, messages: rows,file: file});
+   });
+ }).catch(function(){res.sendStatus(404);});
+}
 
-exports.post = function(req, res){
+function post(req, res){
  var b =req.body;
  if(b.cmd!="post")return;
- var body = [];
- if(b.mail)body.push("mail:"+b.mail);
- if(b.name)body.push("name:"+b.name);
- if(b.body)body.push("body:"+escape(b.body).replace(/\n/g,"<br>"));
- api.post(b.file,null,null,body.join("<>"));
- res.redirect('back');
+ if(b.key)res.end();else res.redirect('back');
+// if(b.subject)api.threads.create(b.subject);
+ var now = Math.round(new Date().getTime()/1000);
+ var body = "";
+ if(b.mail)body+="mail:"+b.mail+"<>";
+ if(b.name)body+="name:"+b.name+"<>";
+ body+="body:"+escape(b.body).replace(/\r\n|\r|\n/g,"<br>");
+ api.threads.info({file:b.file,dat:(b.key)?b.key+".dat":undefined}).then(function(row){
+   api.thread.post(row.file,now,null,body);
+ });
+}
+
+exports.set=function(app){
+app.get('/',index);
+app.get('/gateway.cgi',index);
+app.get('/gateway.cgi/changes',changes);
+app.get('/thread.cgi/:id',thread);
+app.post('/thread.cgi',post);
+app.post('/test/bbs.cgi',post);
 };

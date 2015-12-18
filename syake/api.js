@@ -3,18 +3,29 @@ var db = new sqlite3.Database('record.sqlite3');
 
 var crypto = require('crypto');
 
+var lastmodified =0;
+
+exports.addDate = function(rows){
+  var time = "";
+  for(var i=0;i<rows.length;i++){
+   time = new Date(rows[i].stamp*1000).toString();
+   rows[i].date = time.substring(0,time.indexOf(" GMT"));
+  }
+  return rows;
+}
+
 exports.threads = function(option,callback){
- var rows="*";
- db.all("SELECT "+rows+" FROM threads order by stamp desc "+ option, function(err, rows){
-  if(err)throw err;
-  callback(rows);
- });
+ db.all("SELECT * FROM threads order by stamp desc "+ option, function(err, rows){callback(exports.addDate(rows));});
+};
+
+exports.notExist = function(file,callback,other){
+  db.get("SELECT rowid from threads where file = ?",file, function(err,row){if(!row)callback();else if(other)other();});
 };
 
 function encode(s){
  var output = "";
  var x = 0;
- for(i=0; i<s.length; ++i){
+ for(var i=0; i<s.length; ++i){
   x = s.charCodeAt(i);
   output += (x<0x80)?x.toString(16).toUpperCase():s.charAt(i);
  }
@@ -23,15 +34,17 @@ function encode(s){
 exports.threadfile = function(title){return "thread_"+encode(title);};
 function decode(s){
  var output = "";
- for(i=0; i<s.length; ++i){output+=((i%2==0)?"%":"")+s.charAt(i);}
- console.log(output);
+ for(var i=0; i<s.length; ++i){output+=((i%2==0)?"%":"")+s.charAt(i);}
  return decodeURIComponent(output);
 }
 exports.getTitle = function(file){return decode(file.substring("thread_".length));};
 
 exports.create = function(file){
- db.run("CREATE TABLE IF NOT EXISTS "+file+" (stamp int,id text,content text)");
- db.run("INSERT INTO threads(title,file) VALUES(?,?)", exports.getTitle(file), file ,function(err,row){if(!err)console.log(err);});
+ exports.notExist(file,function(){
+  var now = Math.round(new Date().getTime()/1000);
+  db.run("CREATE TABLE IF NOT EXISTS ?? (stamp int,id text,content text)", file);
+  db.run("INSERT INTO threads(file,title,dat) VALUES(?,?,?)", file, exports.getTitle(file), now+".dat");
+ });
 };
 
 exports.get = function(file,option,callback){
@@ -51,14 +64,10 @@ exports.post = function(file,stamp,id0,body){
 
  var now = Math.round(new Date().getTime()/1000);
  stamp = stamp||now;
- var time = new Date().toString();
- time = time.substring(0,time.indexOf(" GMT"));
-
- db.get("SELECT * from threads where file = ?",file, function(err,row){
-  db.serialize(function(){
-   if(!row)exports.create(file);
-   db.run("UPDATE threads set stamp=?, date=?, records=records + 1 where file = ?", now, time, file);
-   db.run("INSERT INTO "+file+"  VALUES(?,?,?)", stamp, id, body);
-  });
- });
+ lastmodified=now;
+ 
+ db.run("UPDATE threads set stamp=?, records=records+1 where file = ?", now, file);
+ db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, body);
 };
+
+exports.lastmodified = function(){return lastmodified;};

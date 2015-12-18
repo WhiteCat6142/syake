@@ -12,7 +12,9 @@
     "escape-html": "^1.0.3",
     "express": "4.*",
     "jade": "*",
+    "memory-cache": "*",
     "morgan": "^1.6.1",
+    "request": "^2.67.0",
     "sqlite3": "*"
   }
 }
