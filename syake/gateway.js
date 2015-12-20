@@ -18,7 +18,7 @@ function thread(req, res){
  var title = req.params.id;
  api.threads.info({title:title}).then(function(row){
    var file = row.file;
-   api.thread.get(file,{}).then(api.addDate)
+   api.thread.get(file,{}).then(api.convert)
    .then(function(rows){res.render('bbs', { title: title, messages: rows,file: file});
    });
  }).catch(function(){res.sendStatus(404);});

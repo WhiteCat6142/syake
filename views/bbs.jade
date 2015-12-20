@@ -5,13 +5,40 @@ block append scripts
   window.onload=function(){document.getElementById("cmd").value="post";};
 
 block content
-    form(method="post",action="/test/bbs.cgi")
+    each msg in messages
+     .panel.panel-default.new-record
+      .panel-heading
+       span.glyphicon.glyphicon-tag
+       |!{msg.id}
+       span.glyphicon.glyphicon-time
+       |!{msg.date}
+       .btn-group.pull-right
+        span.glyphicon.glyphicon-cog
+      .clearfix
+      .panel-body
+       p !{msg.body}
+    form.well.col-md-8.col-md-offset-2(method="post",action="/test/bbs.cgi")
      input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")
-     input(type="text",name="mail")
-     input(type="text",name="name")
-     textarea(name="body")
-     input(type="submit",value="add")
-    ul
-     each msg in messages
-      li= msg.content
+     .input-wrapper.col-md-offset-1.col-md-10
+      .col-md-6
+       span.input-group-addon
+        span.glyphicon.glyphicon-user
+        |Name
+       input.form-control(type="text",name="name")
+      .col-md-6
+       span.input-group-addon
+        span.glyphicon.glyphicon-envelope
+        |Mail
+       input.form-control(type="text",name="mail")
+      .col-md-12
+       span.input-group-addon
+        span.glyphicon.glyphicon-font
+        |Text
+       textarea.form-control(name="body",rows="6")
+      .col-md-8.col-md-offset-4
+       button.btn.btn-primary(type="submit")
+        span.glyphicon.glyphicon-pencil
+        |add
+       a.btn(href="/gateway.cgi/motd") 利用規約
+    .clearfix

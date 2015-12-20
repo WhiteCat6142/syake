@@ -2,20 +2,23 @@
 
 block content
     .container
-     h1 新月
-     h2 タグ
+     h1 タグ
      #tags
        each tag in tags
          a(href="/gateway.cgi/changes?tag="+tag) #{tag}
-     h2 スレッド
+     h1 スレッド
      ul
        each thread in threads
          li
            a(href="/thread.cgi/"+thread.title) #{thread.title} (#{thread.records})
      a(href="/gateway.cgi/changes") 最終更新
-     h2 リンク
+     h1 リンク
       ul
        li
         a(href="http://www.shingetsu.info/") 公式サイト
        li
         a(href="/2ch/subject.txt") 2chブラウザ
+       li
+        a(href="/gateway.cgi/rss") RSS
+       li
+        a(href="/gateway.cgi/motd") 利用規約

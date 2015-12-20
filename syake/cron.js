@@ -3,7 +3,7 @@ var api = require('./api2');
 var http = require('http');
 var zlib = require('zlib');
 
-var nodes = ["localhost:8080/server.cgi"];
+var nodes = ["127.0.0.1:8080/server.cgi"];
 exports.nodes=nodes;
 
 Object.observe(api.recent,function(changes){
@@ -62,7 +62,7 @@ function get(url){
 				res.on('data', function(chunk){bufs.push(chunk);});
 				res.on('end', function(){
 					var data = Buffer.concat(bufs);
-					if(res.headers["Content-Encoding"]=="gzip"){
+					if(res.headers["content-encoding"]=="gzip"){
 						zlib.gunzip(data, function (err, binary) {
 							var body = binary.toString('utf-8');
 							resolve(body);
@@ -72,15 +72,18 @@ function get(url){
 		});
 		request.on('error', function(e){reject(e);});
 		request.setHeader("accept-encoding","gzip");
+		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.4.0)');
 		request.end();
 	});
 }
 function readLine(url,callback){
 	return get(url).then(function(body){
 		var x = body.split(/\r\n|\r|\n/);
-		for(var i=0;i<x.length;i++){callback(x[i]);}
+		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
 	});
 }
+
+//get("http://127.0.0.1:8080/server.cgi/join/:3000+server.cgi");
 
 var range = 60*60*24*7;
 function time(){

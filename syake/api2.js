@@ -61,12 +61,28 @@ exports.thread = {
 };
 
 exports.addDate = function(rows){
-  var time = "";
-  for(var i=0;i<rows.length;i++){
-   time = new Date(rows[i].stamp*1000).toString();
-   rows[i].date = time.substring(0,time.indexOf(" GMT"));
-  }
-  return Promise.resolve(rows);
+	var time = "";
+	for(var i=0;i<rows.length;i++){
+		time = new Date(rows[i].stamp*1000).toString();
+		rows[i].date = time.substring(0,time.lastIndexOf(" GMT"));
+	}
+	return Promise.resolve(rows);
+};
+exports.convert = function(rows){
+	var r = new Array(rows.length);
+	var time = "";
+	var content=null;
+	for(var i=0;i<rows.length;i++){
+		time = new Date(rows[i].stamp*1000).toString();
+		time = time.substring(0,time.lastIndexOf(" GMT"));
+		r[i]={date:time,id:rows[i].id.substr(0,8)};
+		content=rows[i].content.split("<>");		
+		for(var j=0;j<content.length;j++){
+			var x = content[j].match(/([a-z]*):(.*)/);
+			r[i][x[1]]=x[2];
+		}
+	}
+	return Promise.resolve(r);
 };
 
 function encode(s){

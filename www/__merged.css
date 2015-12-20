@@ -4,10 +4,6 @@
 body {
     background-color: #fff;
 }
-h1, h1 a {
-    color: #00e;
-    text-decoration: none;
-}
 dt {
     background-color: #ccf;
 }
@@ -98,4 +94,11 @@ a {
 }
 #tags a{
     margin:5px;
+}
+
+.panel-heading{
+    font-family: monospace;
+}
+.glyphicon{
+    margin: 2px;
 }
