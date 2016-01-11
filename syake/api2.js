@@ -14,6 +14,8 @@ var sqlRun = db.run;
 var recent ={last:""};
 exports.recent=recent;
 
+exports.unkownThreads=[];
+
 exports.threads = {
 	get:function(option){
 		var s="";
@@ -23,13 +25,15 @@ exports.threads = {
 		return sqlGet("threads",s);
 	},
 	create:function(title){
-	  var dat = now()+".dat";
+      var t = now();
+	  var dat = t+".dat";
 	  var file = threadFile(title);
- 	  sqlRun("CREATE TABLE IF NOT EXISTS ?? (stamp int,id text,content text)", file);
- 	  sqlRun("INSERT INTO threads(file,title,dat) VALUES(?,?,?)", file, title, dat);
+      console.log("newThread:"+t+" "+dat+" "+file+" "+title)
+ 	  db.run("CREATE TABLE "+file+" (stamp int,id text,content text)");
+ 	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?)", t, title, dat, file);
 	},
 	info:function(option){
-		var s="";
+        var s = "";
 		if(option.file)s+=" where file = \""+option.file+"\"";
 		else if(option.title)s+=" where title = \""+option.title+"\"";
 		else if(option.dat)s+=" where dat = \""+option.dat+"\"";
@@ -49,7 +53,7 @@ exports.thread = {
 		return sqlGet(file,s);
 	},
 	post:function(file,stamp,id,body){
-		console.log(file,stamp,id,body);
+		console.log(file,stamp,id,body.substring(0,16));
 		if(!body)throw new Error("Empty Message");
 		var md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
@@ -79,7 +83,7 @@ exports.convert = function(rows){
 		content=rows[i].content.split("<>");		
 		for(var j=0;j<content.length;j++){
 			var x = content[j].match(/([a-z]*):(.*)/);
-			r[i][x[1]]=x[2];
+			if(x)r[i][x[1]]=x[2];
 		}
 	}
 	return Promise.resolve(r);
@@ -95,6 +99,13 @@ function encode(s){
  return encodeURIComponent(output).replace(/%/g,"");
 }
 function threadFile(title){return "thread_"+encode(title);};
+
+function decode(s){
+ var output = "";
+ for(var i=0; i<s.length; ++i){output+=((i%2==0)?"%":"")+s.charAt(i);}
+ return decodeURIComponent(output);
+}
+exports.getTitle = function(file){return decode(file.substring("thread_".length));};
 
 function now(){return Math.round(new Date().getTime()/1000);}
 

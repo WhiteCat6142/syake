@@ -2,23 +2,30 @@
 
 block content
     .container
+    .col-md-3
      h1 タグ
      #tags
        each tag in tags
          a(href="/gateway.cgi/changes?tag="+tag) #{tag}
+    .col-md-6
      h1 スレッド
      ul
        each thread in threads
          li
            a(href="/thread.cgi/"+thread.title) #{thread.title} (#{thread.records})
-     a(href="/gateway.cgi/changes") 最終更新
+     ul
+       each thread in x
+         li
+           a(href="/admin.cgi/new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
+     a(href="/gateway.cgi/changes") その他
+    .col-md-3
      h1 リンク
-      ul
-       li
-        a(href="http://www.shingetsu.info/") 公式サイト
-       li
-        a(href="/2ch/subject.txt") 2chブラウザ
-       li
-        a(href="/gateway.cgi/rss") RSS
-       li
-        a(href="/gateway.cgi/motd") 利用規約
+     ul
+      li
+       a(href="http://www.shingetsu.info/") 公式サイト
+      li
+       a(href="/2ch/subject.txt") 2chブラウザ
+      li
+       a(href="/gateway.cgi/rss") RSS
+      li
+       a(href="/gateway.cgi/motd") 利用規約

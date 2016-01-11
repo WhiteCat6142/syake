@@ -1,17 +1,23 @@
-var request = require('request');
 var api = require('./api2');
 var http = require('http');
 var zlib = require('zlib');
+var cronJob = require('cron').CronJob;
 
-var nodes = ["127.0.0.1:8080/server.cgi"];
+var nodes = ["127.0.0.1:8080/server.cgi","node.shingetsu.info:8000/server.cgi","shingetsu.ygch.net:80/server.cgi"];
 exports.nodes=nodes;
 
+var unkownThreads=api.unkownThreads;
+/*
 Object.observe(api.recent,function(changes){
 	var change=changes[0];
 	if(change.type!="update")return;
 	if(change.name!="last")return;
-	for(var i=0;i<nodes.length;i++)get((nodeUrl(nodes[i],"update")+"/"+change.object.last+"/:3000+server.cgi"));
+	for(var i=0;i<nodes.length;i++)
+	 get((nodeUrl(nodes[i],"update")+"/"+change.object.last+"/:3000+server.cgi")).catch(function(err){
+		console.log("bye "+nodes[i]);delete nodes[i];
+	 });
 });
+*/
 
 function update(file,stamp,id,node){
 	console.log("update:"+file+stamp+id+node);
@@ -22,6 +28,13 @@ function update(file,stamp,id,node){
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp,id,x[3]);
 		});
 	});
+}
+function readAll(node,file){
+    api.threads.create(api.getTitle(file));
+    readLine(nodeUrl(node,"get")+"/"+file+"/"+time(),function(body){
+        var x = body.match(/(\d+)<>(.{32})<>(.*)/);
+        api.thread.post(file,x[1],x[2],x[3]);
+    });
 }
 function readHead(node,file){
 	api.thread.get(file,{time:time()}).then(function(rows){
@@ -47,12 +60,20 @@ function readNode(node){
 					return;
 				}
 			}
+            unkownThreads.push({node:node.replace("/","+"),file:x[2],title:api.getTitle(x[2])});
 		});
 	});
 }
-function readAll(){
-	for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
-}
+var cronTime = "00 */5 * * * *";
+var job = new cronJob({
+    cronTime: cronTime,
+    onTick:function(){
+        for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
+    },
+    start: false
+});
+job.start();
+
 
 function get(url){
 	return new Promise(function(resolve, reject){
@@ -80,10 +101,8 @@ function readLine(url,callback){
 	return get(url).then(function(body){
 		var x = body.split(/\r\n|\r|\n/);
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
-	});
+	}).catch(function(e){if(e.code!="ECONNREFUSED")console.log(e);});
 }
-
-//get("http://127.0.0.1:8080/server.cgi/join/:3000+server.cgi");
 
 var range = 60*60*24*7;
 function time(){
@@ -100,12 +119,7 @@ exports.ping = function(node){
 };
 exports.update=update;
 exports.read=readNode;
-
-function difference(a,b){
-	return a.filter(function(element){
-		return (b.indexOf(element)==-1);
-	});
-}
+exports.readAll=readAll;
 
 function nodeUrl(node,m){
 	console.log(m+" "+node);

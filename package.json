@@ -8,6 +8,7 @@
   "dependencies": {
     "body-parser": "*",
     "compression": "*",
+    "cron": "^1.1.0",
     "crypto": "0.0.3",
     "escape-html": "^1.0.3",
     "express": "4.*",

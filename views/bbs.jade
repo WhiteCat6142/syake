@@ -9,18 +9,19 @@ block content
      .panel.panel-default.new-record
       .panel-heading
        span.glyphicon.glyphicon-tag
-       |!{msg.id}
+       |!{msg.id}&nbsp;
+       if msg.name
+        span.glyphicon.glyphicon-user
+        |!{msg.name}&nbsp;
        span.glyphicon.glyphicon-time
        |!{msg.date}
-       .btn-group.pull-right
-        span.glyphicon.glyphicon-cog
       .clearfix
       .panel-body
-       p !{msg.body}
+       |!{msg.body}
     form.well.col-md-8.col-md-offset-2(method="post",action="/test/bbs.cgi")
      input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")
-     .input-wrapper.col-md-offset-1.col-md-10
+     .input-wrapper
       .col-md-6
        span.input-group-addon
         span.glyphicon.glyphicon-user
@@ -39,6 +40,5 @@ block content
       .col-md-8.col-md-offset-4
        button.btn.btn-primary(type="submit")
         span.glyphicon.glyphicon-pencil
-        |add
+        |Post
        a.btn(href="/gateway.cgi/motd") 利用規約
-    .clearfix

@@ -5,7 +5,7 @@ var escape = require('escape-html');
 var tags =["a","b","c"];
 function index(req, res) {
  api.threads.get({limit:15,sort:true}).then(api.addDate).then(function(threads) {
-  res.render('index',{threads:threads,tags:tags});
+  res.render('index',{threads:threads,tags:tags,x:api.unkownThreads});
  });
 }
 function changes(req, res) {
@@ -27,7 +27,6 @@ function thread(req, res){
 function post(req, res){
  var b =req.body;
  if(b.cmd!="post")return;
- if(b.key)res.end();else res.redirect('back');
 // if(b.subject)api.threads.create(b.subject);
  var now = Math.round(new Date().getTime()/1000);
  var body = "";
@@ -37,6 +36,7 @@ function post(req, res){
  api.threads.info({file:b.file,dat:(b.key)?b.key+".dat":undefined}).then(function(row){
    api.thread.post(row.file,now,null,body);
  });
+ setTimeout(function(){if(b.key)res.end();else res.redirect('back');},5);
 }
 
 exports.set=function(app){

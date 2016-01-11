@@ -93,8 +93,4 @@ server.get("/get/:file/:time/:id",get);
 server.get('/head/:file/:time',head);
 server.get('/update/:file/:stamp/:id/:node',update);
 server.get('/recent/:time',recent);
-server.get('/test',function(req,res){
-	nodeManeger.read("localhost:8080/server.cgi");
-	res.end();
-});
 };
