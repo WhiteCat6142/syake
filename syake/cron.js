@@ -64,11 +64,14 @@ function readNode(node){
 		});
 	});
 }
-var cronTime = "00 */5 * * * *";
+var numt =0;
+var cronTime = "00 */3 * * * *";
 var job = new cronJob({
     cronTime: cronTime,
     onTick:function(){
-        for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
+        //for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
+        readNode(nodes[numt%nodes.length]);
+        numt++;
     },
     start: false
 });

@@ -48,6 +48,7 @@ exports.thread = {
 		var s = "";
 		if(option.time)s+=times(option.time);
 		if(option.id)s+=((option.time)?" and":" where")+" id = \""+option.id+"\"";
+        s+=" order by stamp asc";
 		if(option.limit)s+=" limit "+option.limit;
 		if(option.offset)s+=" offset "+option.offset;
 		return sqlGet(file,s);

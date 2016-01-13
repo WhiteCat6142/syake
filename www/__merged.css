@@ -102,3 +102,7 @@ a {
 .glyphicon{
     margin: 2px;
 }
+.panel-body img{
+    max-width: 300px;
+    max-height: 300px;
+}
