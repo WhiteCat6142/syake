@@ -1,6 +1,7 @@
 var sqlite3 = require('sqlite3').verbose();
 var db = new sqlite3.Database('record.sqlite3');
 var crypto = require('crypto');
+var escape = require('escape-html');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -15,6 +16,8 @@ var recent ={last:""};
 exports.recent=recent;
 
 exports.unkownThreads=[];
+
+var lastp= Promise.resolve();
 
 exports.threads = {
 	get:function(option){
@@ -59,11 +62,59 @@ exports.thread = {
 		var md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
 		else{id=md5;}
-		recent.last=file+"/"+stamp+"/"+id;
-		db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
-		db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, body);
+        add(file,stamp,id,body);
 	}
 };
+
+var config ={
+    //porto:"http://shingetsu.ygch.net/mobile.cgi"
+    };
+exports.post=function(file,name,mail,body,time){
+/*
+    if(config.porto){
+        req.body.dopost="dopost";
+        req.body.error="";
+        console.log(req.body);
+        request.post(config.porto,{form:req.body});
+        return;
+    }
+*/
+// if(b.subject)api.threads.create(b.subject);
+ var s = "";
+ if(mail)s+="mail:"+mail+"<>";
+ if(name)s+="name:"+name+"<>";
+ s+="body:"+escape(body).replace(/\r\n|\r|\n/g,"<br>");
+ exports.threads.info(file).then(function(row){
+   exports.thread.post(row.file,time||now(),null,s);
+ });  
+};
+
+function add(file,stamp,id,body){
+    var x = new Promise(function(resolve, reject) {
+        db.exec("BEGIN EXCLUSIVE",function(err){
+            if(err){
+                console.log(err);
+                resolve();
+            }
+            sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
+                db.serialize(function() {
+                    if(rows.length==0){
+                        db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
+		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, body);
+                        recent.last=file+"/"+stamp+"/"+id;
+                    }
+                    db.exec("COMMIT");
+                    resolve();
+                });
+            }).catch(function(err){
+                db.exec("ROLLBACK");
+                console.log(err);
+                resolve();
+            });
+        });
+    });
+    lastp = lastp.then(x);
+}
 
 exports.addDate = function(rows){
 	var time = "";

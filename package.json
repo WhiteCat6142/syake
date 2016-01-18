@@ -12,6 +12,7 @@
     "crypto": "0.0.3",
     "escape-html": "^1.0.3",
     "express": "4.*",
+    "iconv-lite": "^0.4.13",
     "jade": "*",
     "memory-cache": "*",
     "morgan": "^1.6.1",

@@ -72,6 +72,7 @@ var job = new cronJob({
         //for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
         readNode(nodes[numt%nodes.length]);
         numt++;
+        numt%=10000;
     },
     start: false
 });

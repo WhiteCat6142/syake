@@ -13,12 +13,20 @@ function newThread(req,res){
 }
 
 exports.set=function(app){
-    app.get('/new/:node/:file',newThread);
+app.get('/',function(req,res){
+    res.render('admin',{nodes:nodeManeger.nodes});
+});
+app.post('/node',function(req,res){
+    nodeManeger.nodes.push(req.body.node);
+    res.redirect("back");
+});
 app.get('/refresh',function(req,res){
     var a = nodeManeger.nodes;
     for(var i=0; i<a.length; i++){nodeManeger.read(a[i]);}
     res.redirect("back");
 });
+
+app.get('/new/:node/:file',newThread);
 app.get('/new/:title',function(req,res){
     api.threads.create(req.params.title);
     res.redirect("/thread.cgi/"+req.params.title);

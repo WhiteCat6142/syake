@@ -1,0 +1,9 @@
+extends base
+
+block content
+ ul
+  each node in nodes
+   li !{node}
+ form(action='/admin.cgi/node' method='post')
+  input(name="node" type="text")
+  button(type="submit") Add

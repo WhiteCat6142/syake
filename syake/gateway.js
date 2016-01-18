@@ -1,6 +1,5 @@
 var api = require('./api2');
 var cache = require('memory-cache');
-var escape = require('escape-html');
 
 var tags =["a","b","c"];
 function index(req, res) {
@@ -25,18 +24,10 @@ function thread(req, res){
 }
 
 function post(req, res){
- var b =req.body;
+var b =req.body;
  if(b.cmd!="post")return;
-// if(b.subject)api.threads.create(b.subject);
- var now = Math.round(new Date().getTime()/1000);
- var body = "";
- if(b.mail)body+="mail:"+b.mail+"<>";
- if(b.name)body+="name:"+b.name+"<>";
- body+="body:"+escape(b.body).replace(/\r\n|\r|\n/g,"<br>");
- api.threads.info({file:b.file,dat:(b.key)?b.key+".dat":undefined}).then(function(row){
-   api.thread.post(row.file,now,null,body);
- });
- setTimeout(function(){if(b.key)res.end();else res.redirect('back');},5);
+api.post({file:b.file},b.name,b.mail,b.body,undefined);
+res.redirect('back');
 }
 
 exports.set=function(app){
@@ -45,5 +36,4 @@ app.get('/gateway.cgi',index);
 app.get('/gateway.cgi/changes',changes);
 app.get('/thread.cgi/:id',thread);
 app.post('/thread.cgi',post);
-app.post('/test/bbs.cgi',post);
 };

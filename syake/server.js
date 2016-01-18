@@ -6,7 +6,8 @@ function ping(req, res) {
 	res.end("PONG\n"+req.ip);
 }
 function node(req, res) {
-	res.end(nodes[Math.floor(Math.random()*nodes.length)]);
+    res.end("localhost:3000/server.cgi");
+	//res.end(nodes[Math.floor(Math.random()*nodes.length)]);
 }
 function join(req, res) {
  var node = req.node;

@@ -41,6 +41,10 @@ var server = express.Router();
 app.use("/server.cgi",server);
 require('./syake/server').set(server);
 
+require('./syake/dat').set(app);
+
+//require('./syake/apollo');
+
 app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
 app.use(function(req, res, next){res.sendStatus(404);});
 
