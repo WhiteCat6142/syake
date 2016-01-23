@@ -17,7 +17,7 @@ exports.recent=recent;
 
 exports.unkownThreads=[];
 
-var lastp= Promise.resolve();
+exports.config=undefined;
 
 exports.threads = {
 	get:function(option){
@@ -67,7 +67,7 @@ exports.thread = {
 };
 
 var config ={
-    //porto:"http://shingetsu.ygch.net/mobile.cgi"
+    //
     };
 exports.post=function(file,name,mail,body,time){
 /*
@@ -90,12 +90,7 @@ exports.post=function(file,name,mail,body,time){
 };
 
 function add(file,stamp,id,body){
-    var x = new Promise(function(resolve, reject) {
-        db.exec("BEGIN EXCLUSIVE",function(err){
-            if(err){
-                console.log(err);
-                resolve();
-            }
+    transaction(new Promise(function(resolve, reject) {
             sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
                 db.serialize(function() {
                     if(rows.length==0){
@@ -103,17 +98,29 @@ function add(file,stamp,id,body){
 		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, body);
                         recent.last=file+"/"+stamp+"/"+id;
                     }
-                    db.exec("COMMIT");
                     resolve();
                 });
-            }).catch(function(err){
-                db.exec("ROLLBACK");
-                console.log(err);
-                resolve();
+            }).catch(function(err){reject();});
+        })
+        );
+}
+
+var nextAction =[];
+function transaction(p){
+    if(!p)return;
+            db.exec("BEGIN EXCLUSIVE",function(err){
+            if(err){
+                nextAction.push(p);
+            }
+            p.then(
+                function(){db.exec("COMMIT");}
+                ,function(err){db.exec("ROLLBACK");}
+            ).then(function(){
+                setImmediate(function(){
+                    transaction(nextAction.shift());
+                });
             });
-        });
-    });
-    lastp = lastp.then(x);
+            });
 }
 
 exports.addDate = function(rows){
@@ -140,6 +147,14 @@ exports.convert = function(rows){
 	}
 	return Promise.resolve(r);
 };
+
+exports.notice=function(file,node){
+    var unkownThreads = exports.unkownThreads;
+    for(var i=0;i<unkownThreads.length;i++){
+        if(unkownThreads[i].file==file)return;
+    }
+    unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:exports.getTitle(file)});
+}
 
 function encode(s){
  var output = "";

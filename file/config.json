@@ -1,1 +1,5 @@
-{"vistor":"(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)"}
+{
+    "vistor":"(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)",
+    "user":"admin:p0ss",
+    "porto":"http://shingetsu.ygch.net/mobile.cgi"
+}

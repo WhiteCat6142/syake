@@ -31,7 +31,7 @@ function update(file,stamp,id,node){
 }
 function readAll(node,file){
     api.threads.create(api.getTitle(file));
-    readLine(nodeUrl(node,"get")+"/"+file+"/"+time(),function(body){
+    readLine(nodeUrl(node,"get")+"/"+file+"/0-",function(body){
         var x = body.match(/(\d+)<>(.{32})<>(.*)/);
         api.thread.post(file,x[1],x[2],x[3]);
     });
@@ -51,16 +51,16 @@ function readHead(node,file){
 	});
 }
 function readNode(node){
-	api.threads.get({time:time()}).then(function(rows){
+	api.threads.get({}).then(function(rows){
 		readLine(nodeUrl(node,"recent")+"/"+time(),function(body){
 			var x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i].file==x[2]){
-					if(rows[i].laststamp!=x[0]||rows[i].lastid!=x[1])readHead(node,x[2]);
+					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
 					return;
 				}
 			}
-            unkownThreads.push({node:node.replace("/","+"),file:x[2],title:api.getTitle(x[2])});
+            api.notice(x[2],node)
 		});
 	});
 }

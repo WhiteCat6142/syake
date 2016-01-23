@@ -5,8 +5,7 @@ var compression = require('compression');
 var logger = require("morgan");
 var jade = require("jade");
 
-
-var config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
+var config=require("./syake/api2").config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
 
 app.use(function(req, res, next){
   if(req.ip.match(config.vistor)){next();}else{res.sendStatus(403);}

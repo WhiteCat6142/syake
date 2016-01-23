@@ -4,33 +4,55 @@ var iconv = require('iconv-lite');
 function subject(req,res){
     api.threads.get({}).then(function(rows){
         for(var i=0;i<rows.length;i++){
-            res.write(iconv.encode((rows[i].dat+"<>"+rows[i].title+" ("+rows[i].records+")\n"),"Shift_JIS"));
+            res.write(en((rows[i].dat+"<>"+rows[i].title+" ("+rows[i].records+")\n")));
         }
         res.end();
     });
 }
 function dat(req,res){
     api.threads.info({dat:req.params.dat}).then(function(row){
+        res.setHeader("Last-Modified",new Date(row.stamp).toString());
+        var t = req.headers["if-modified-since"];
+        if(t){
+            t=Math.round(new Date(t).getTime()/1000);
+            if(row.stamp<=t){
+            res.sendStatus(304);
+            return;
+            }
+        }
         var file = row.file;
         api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
         for(var i=0;i<rows.length;i++){
-            res.write(iconv.encode(([
+            res.write(en(([
                 rows[i].name,
                 rows[i].mail,
                 rows[i].date+" ID:"+rows[i].id,
                 rows[i].body,
                 (i==0)?row.title:""
-            ].join("<>")+"\n"),"Shift_JIS"));
+            ].join("<>")+"\n")));
         }
         res.end();
         });
     });
 }
-var msg = iconv.encode("<HTML><!-- 2ch_X:true --><HEAD><TITLE>書きこみました</TITLE></HEAD><BODY>書きこみました</BODY></HTML>","Shift_JIS");
+var msg = en("<HTML><!-- 2ch_X:true --><HEAD><TITLE>書きこみました</TITLE></HEAD><BODY>書きこみました</BODY></HTML>");
 function post(req, res){
  var b =req.body;
- api.post({dat:b.key+".dat"},b.FROM,b.mail,b.MESSAGE,parseInt(b.time,10))
+ api.post({dat:b.key+".dat"},de(b.FROM),de(b.mail),de(b.MESSAGE),parseInt(b.time,10))
  res.end(msg);
+}
+
+function de(str){
+ var output = "";
+ var x = 0;
+ for(var i=0; i<str.length; ++i){
+  if(str.charAt(i)!="%")output+=str.charCodeAt(i);
+  else output+=str.charAt(++i)+str.charAt(++i);
+ }
+    return iconv.decode(new Buffer(output,"hex"),"Shift_JIS");
+}
+function en(str){
+    return iconv.encode(str,"Shift_JIS");
 }
 
 exports.set=function(app){
