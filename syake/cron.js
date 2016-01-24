@@ -6,16 +6,15 @@ var cronJob = require('cron').CronJob;
 var nodes = ["127.0.0.1:8080/server.cgi","node.shingetsu.info:8000/server.cgi","shingetsu.ygch.net:80/server.cgi"];
 exports.nodes=nodes;
 
-var unkownThreads=api.unkownThreads;
 /*
-Object.observe(api.recent,function(changes){
-	var change=changes[0];
-	if(change.type!="update")return;
-	if(change.name!="last")return;
-	for(var i=0;i<nodes.length;i++)
-	 get((nodeUrl(nodes[i],"update")+"/"+change.object.last+"/:3000+server.cgi")).catch(function(err){
-		console.log("bye "+nodes[i]);delete nodes[i];
-	 });
+api.update.on("update",function(file,stamp,id){
+    for(var i=0;i<nodes.length;i++){
+        get((nodeUrl(nodes[i],"update")+"/"+file+"/"+stamp+"/"+id+"/:3000+server.cgi"))
+        .catch(function(err){
+		console.log("bye "+nodes[i]);
+        delete nodes[i];
+        });
+     }
 });
 */
 

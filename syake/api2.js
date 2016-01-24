@@ -2,6 +2,8 @@ var sqlite3 = require('sqlite3').verbose();
 var db = new sqlite3.Database('record.sqlite3');
 var crypto = require('crypto');
 var escape = require('escape-html');
+var EventEmitter = require('events').EventEmitter;
+var request = require('request');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -10,10 +12,10 @@ function sqlGet(file,option,o){
 		});
 	});
 }
-var sqlRun = db.run;
 
-var recent ={last:""};
-exports.recent=recent;
+exports.recent=[];
+
+exports.update=new EventEmitter();
 
 exports.unkownThreads=[];
 
@@ -66,19 +68,15 @@ exports.thread = {
 	}
 };
 
-var config ={
-    //
-    };
 exports.post=function(file,name,mail,body,time){
-/*
+var config={};
     if(config.porto){
-        req.body.dopost="dopost";
-        req.body.error="";
+        var req ={cmd:"post",file:file,name:name,mail:mail,dopost:"dopost",error:""};
         console.log(req.body);
         request.post(config.porto,{form:req.body});
         return;
     }
-*/
+
 // if(b.subject)api.threads.create(b.subject);
  var s = "";
  if(mail)s+="mail:"+mail+"<>";
@@ -89,20 +87,35 @@ exports.post=function(file,name,mail,body,time){
  });  
 };
 
-function add(file,stamp,id,body){
-    transaction(new Promise(function(resolve, reject) {
+function add(file,stamp,id,content){
+    transaction(function(resolve, reject) {
             sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
                 db.serialize(function() {
                     if(rows.length==0){
                         db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
-		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, body);
-                        recent.last=file+"/"+stamp+"/"+id;
+		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, content);
+                        exports.update.emit('update',file,stamp,id);
+                        exports.recent.push({
+                            title:exports.getTitle(file),
+                            file:file,
+                            stamp:stamp,
+                            id:id,
+                            content:content
+                        });
+                        cleanRecent();
                     }
                     resolve();
                 });
             }).catch(function(err){reject();});
-        })
-        );
+        });
+}
+function cleanRecent(){
+    var list = exports.recent;
+    var t = now()-24*60*60*7;
+    for(var i=0;i<list.length;i++){
+        if(list[i].stamp>t)return;
+        list[i]=undefined;
+    }
 }
 
 var nextAction =[];
@@ -111,8 +124,9 @@ function transaction(p){
             db.exec("BEGIN EXCLUSIVE",function(err){
             if(err){
                 nextAction.push(p);
+                return;
             }
-            p.then(
+            new Promise(p).then(
                 function(){db.exec("COMMIT");}
                 ,function(err){db.exec("ROLLBACK");}
             ).then(function(){
@@ -145,7 +159,7 @@ exports.convert = function(rows){
 			if(x)r[i][x[1]]=x[2];
 		}
 	}
-	return Promise.resolve(r);
+	return r;
 };
 
 exports.notice=function(file,node){

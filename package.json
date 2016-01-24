@@ -17,6 +17,7 @@
     "memory-cache": "*",
     "morgan": "^1.6.1",
     "request": "^2.67.0",
+    "rss": "^1.2.1",
     "sqlite3": "*"
   }
 }

@@ -3,9 +3,8 @@
     meta(charset="utf-8")
     title #{title}
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    link(rel="stylesheet" type="text/css" href="/gateway.cgi/honoka/css/bootstrap.min.css")
+    link(rel="stylesheet" type="text/css" href="http://cdn.honokak.osaka/umi/3.3.4a/css/bootstrap.min.css")
     link(rel="stylesheet" type="text/css" href="/gateway.cgi/__merged.css")
-    block scripts
   body
    header
     .navbar.navbar-default
@@ -15,3 +14,6 @@
    .container
      h1 #{title}
      block content
+   block scripts
+    script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.min.js").
+    script(type="text/javascript" src="http://cdn.honokak.osaka/umi/3.3.4a/css/bootstrap.min.js").

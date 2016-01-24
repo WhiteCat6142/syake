@@ -16,6 +16,7 @@ app.use(compression({threshold:0}));
 app.use(logger('dev'));
 
 app.use("/gateway.cgi",express.static('www',{maxAge:86400000*7}));
+app.use("/",express.static('www',{maxAge:86400000*7}));
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
@@ -44,7 +45,7 @@ require('./syake/dat').set(app);
 
 //require('./syake/apollo');
 
-app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
+//app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
 app.use(function(req, res, next){res.sendStatus(404);});
 
 http.createServer(app).listen(3000, function(){
