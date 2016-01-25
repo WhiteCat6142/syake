@@ -2,7 +2,7 @@ var api = require('./api2');
 var iconv = require('iconv-lite');
 
 function subject(req,res){
-    api.threads.get({}).then(function(rows){
+    api.threads.get({sort:true}).then(function(rows){
         for(var i=0;i<rows.length;i++){
             res.write(en((rows[i].dat+"<>"+rows[i].title+" ("+rows[i].records+")\n")));
         }
@@ -14,8 +14,7 @@ function dat(req,res){
         res.setHeader("Last-Modified",new Date(row.stamp).toString());
         var t = req.headers["if-modified-since"];
         if(t){
-            t=Math.round(new Date(t).getTime()/1000);
-            if(row.stamp<=t){
+            if(row.stamp<=Math.round(new Date(t).getTime()/1000)){
             res.sendStatus(304);
             return;
             }
@@ -57,7 +56,7 @@ function en(str){
 
 exports.set=function(app){
     app.use(function(req,res,next){
-        res.setHeader("Content-Type","text/plain; charset=Shift_JIS");
+        res.contentType("text/plain; charset=Shift_JIS");
         next();
     });
 app.get('/2ch/subject.txt',subject);

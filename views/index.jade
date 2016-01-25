@@ -11,8 +11,10 @@ block content
      h1 スレッド
      ul
        each thread in threads
-         li
-           a(href="/thread.cgi/"+thread.title) #{thread.title} (#{thread.records})
+         .card
+          .card-block
+           a.card-title(href="/thread.cgi/"+thread.title) #{thread.title}
+           .card-text #{thread.records}comments
      ul
        each thread in x
          li

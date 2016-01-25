@@ -3,7 +3,7 @@ var http = require('http');
 var zlib = require('zlib');
 var cronJob = require('cron').CronJob;
 
-var nodes = ["127.0.0.1:8080/server.cgi","node.shingetsu.info:8000/server.cgi","shingetsu.ygch.net:80/server.cgi"];
+var nodes = api.config.nodes;
 exports.nodes=nodes;
 
 /*
@@ -30,7 +30,7 @@ function update(file,stamp,id,node){
 }
 function readAll(node,file){
     api.threads.create(api.getTitle(file));
-    readLine(nodeUrl(node,"get")+"/"+file+"/0-",function(body){
+    readLine(nodeUrl(node,"get")+"/"+file+"/"+time(api.config.range.newThread),function(body){
         var x = body.match(/(\d+)<>(.{32})<>(.*)/);
         api.thread.post(file,x[1],x[2],x[3]);
     });
@@ -41,9 +41,11 @@ function readHead(node,file){
 		for(var i=0;i<rows.length;i++){
 			list[i]=rows[i].stamp+"<>"+rows[i].id;
 		}
-		readLine(nodeUrl(node,"head")+"/"+file+"/"+time(),function(body){
-			if(list.indexOf(body)==-1){
+		readLine(nodeUrl(node,"head")+"/"+file+"/"+time(api.config.range.head),function(body){
+            var i=list.indexOf(body);
+			if(i==-1){
 				var x=body.split("<>");
+                list[i]=undefined;
 				update(file,x[0],x[1],node);
 			}
 		});
@@ -51,11 +53,12 @@ function readHead(node,file){
 }
 function readNode(node){
 	api.threads.get({}).then(function(rows){
-		readLine(nodeUrl(node,"recent")+"/"+time(),function(body){
+		readLine(nodeUrl(node,"recent")+"/"+time(api.config.range.node),function(body){
 			var x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
-				if(rows[i].file==x[2]){
+				if(rows[i]&&rows[i].file==x[2]){
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
+                    rows[i]=undefined;
 					return;
 				}
 			}
@@ -63,15 +66,12 @@ function readNode(node){
 		});
 	});
 }
-var numt =0;
 var cronTime = "00 */3 * * * *";
 var job = new cronJob({
     cronTime: cronTime,
     onTick:function(){
-        //for(var i=0;i<nodes.length;i++)readNode(nodes[i]);
-        readNode(nodes[numt%nodes.length]);
-        numt++;
-        numt%=10000;
+        if(!this.numt||this.numt>=nodes.length)this.numt=0;
+        readNode(nodes[this.numt++]);
     },
     start: false
 });
@@ -107,9 +107,9 @@ function readLine(url,callback){
 	}).catch(function(e){if(e.code!="ECONNREFUSED")console.log(e);});
 }
 
-var range = 60*60*24*7;
-function time(){
-	return (Math.round(new Date().getTime()/1000)-range)+"-";
+var range = 7;
+function time(r){
+	return (Math.round(new Date().getTime()/1000)-(r||range)*24*60*60)+"-";
 }
 
 exports.ping = function(node){

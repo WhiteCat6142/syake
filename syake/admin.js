@@ -1,5 +1,6 @@
 var api = require('./api2');
 var nodeManeger = require('./cron');
+var cache =require('memory-cache');
 
 exports.set=function(app){
 app.use(function(req, res, next){
@@ -19,12 +20,14 @@ app.get('/',function(req,res){
 });
 app.post('/node',function(req,res){
     var node = req.body.node;
-    nodeManeger.nodes.push(node);
+    if(node.startsWith("del ")){}
+     else {nodeManeger.nodes.push(node);}
     res.redirect("back");
 });
 app.get('/refresh',function(req,res){
     var a = nodeManeger.nodes;
     for(var i=0; i<a.length; i++){nodeManeger.read(a[i]);}
+    cache.clear();
     res.redirect("back");
 });
 

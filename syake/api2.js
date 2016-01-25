@@ -33,6 +33,10 @@ exports.threads = {
       var t = now();
 	  var dat = t+".dat";
 	  var file = threadFile(title);
+      var l=exports.unkownThreads;
+      for(var i=0;i<l.length;i++){
+          if(l[i].file==file){l.splice(i,1);}
+      }
       console.log("newThread:"+t+" "+dat+" "+file+" "+title)
  	  db.run("CREATE TABLE "+file+" (stamp int,id text,content text)");
  	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?)", t, title, dat, file);
@@ -52,11 +56,9 @@ exports.thread = {
 	get:function(file,option){
 		var s = "";
 		if(option.time)s+=times(option.time);
-		if(option.id)s+=((option.time)?" and":" where")+" id = \""+option.id+"\"";
-        s+=" order by stamp asc";
-		if(option.limit)s+=" limit "+option.limit;
-		if(option.offset)s+=" offset "+option.offset;
-		return sqlGet(file,s);
+		if(option.id)s+=((s)?" and":" where")+" id = \""+option.id+"\"";
+		if(option.limit&&option.offset)s+=((s)?" and":" where")+" rowid between "+option.offset+" and "+(option.limit+option.offset-1);
+		return sqlGet(file,s+" order by stamp asc");
 	},
 	post:function(file,stamp,id,body){
 		console.log(file,stamp,id,body.substring(0,16));
@@ -68,16 +70,14 @@ exports.thread = {
 	}
 };
 
-exports.post=function(file,name,mail,body,time){
-var config={};
-    if(config.porto){
-        var req ={cmd:"post",file:file,name:name,mail:mail,dopost:"dopost",error:""};
-        console.log(req.body);
-        request.post(config.porto,{form:req.body});
+exports.post=function(file,name,mail,body,time,subject){
+//if(subject)exports.threads.create(subject);
+var porto=exports.config.porto;
+    if(porto){
+        var req ={cmd:"post",file:file,name:name,mail:mail,body:body,dopost:"dopost",error:""};
+        request.post(porto,{form:req});
         return;
     }
-
-// if(b.subject)api.threads.create(b.subject);
  var s = "";
  if(mail)s+="mail:"+mail+"<>";
  if(name)s+="name:"+name+"<>";
@@ -112,9 +112,8 @@ function add(file,stamp,id,content){
 function cleanRecent(){
     var list = exports.recent;
     var t = now()-24*60*60*7;
-    for(var i=0;i<list.length;i++){
-        if(list[i].stamp>t)return;
-        list[i]=undefined;
+    while(list[0].stamp<t){
+        list.shift();
     }
 }
 

@@ -110,3 +110,6 @@ a {
 .input-group-addon {
     color: Maroon;
 }
+.panel{
+    word-wrap: break-word;
+}

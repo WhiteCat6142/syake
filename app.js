@@ -11,11 +11,12 @@ app.use(function(req, res, next){
   if(req.ip.match(config.vistor)){next();}else{res.sendStatus(403);}
 });
 
-app.use(compression({threshold:0}));
-
 app.use(logger('dev'));
 
-app.use("/gateway.cgi",express.static('www',{maxAge:86400000*7}));
+app.use(require("./comp-cache").get);
+
+app.use(compression({threshold:0}));
+
 app.use("/",express.static('www',{maxAge:86400000*7}));
 
 var bodyParser = require('body-parser');
