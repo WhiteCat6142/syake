@@ -4,20 +4,26 @@ var app = express();
 var compression = require('compression');
 var logger = require("morgan");
 var jade = require("jade");
+var api = require("./syake/api2");
+var cache = require("./comp-cache");
 
-var config=require("./syake/api2").config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
+api.config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
+
+api.update.on("update",cache.clear);
+api.update.on("notice",cache.clear);
 
 app.use(function(req, res, next){
-  if(req.ip.match(config.vistor)){next();}else{res.sendStatus(403);}
+  if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
 app.use(logger('dev'));
 
-app.use(require("./comp-cache").get);
+app.use(cache.get);
 
 app.use(compression({threshold:0}));
 
 app.use("/",express.static('www',{maxAge:86400000*7}));
+app.use("/file",express.static('cache',{maxAge:86400000*7}));
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
@@ -25,12 +31,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'jade');
 app.set('views', './views');
 
-//var options = {cache: true};
-/*
+var options = {cache: true};
+
 jade.compileFile('./views/base.jade', options);
 jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
-*/
+
 
 require('./syake/gateway').set(app);
 

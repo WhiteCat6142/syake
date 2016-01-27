@@ -1,7 +1,6 @@
 var api = require('./api2');
 var http = require('http');
 var zlib = require('zlib');
-var cronJob = require('cron').CronJob;
 
 var nodes = api.config.nodes;
 exports.nodes=nodes;
@@ -51,9 +50,10 @@ function readHead(node,file){
 		});
 	});
 }
-function readNode(node){
+function readNode(node,t){
 	api.threads.get({}).then(function(rows){
-		readLine(nodeUrl(node,"recent")+"/"+time(api.config.range.node),function(body){
+        t = t||api.config.range.node;
+		readLine(nodeUrl(node,"recent")+"/"+time(t),function(body){
 			var x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i]&&rows[i].file==x[2]){
@@ -66,22 +66,22 @@ function readNode(node){
 		});
 	});
 }
-var cronTime = "00 */3 * * * *";
-var job = new cronJob({
-    cronTime: cronTime,
-    onTick:function(){
+
+setInterval(function(){
         if(!this.numt||this.numt>=nodes.length)this.numt=0;
         readNode(nodes[this.numt++]);
-    },
-    start: false
-});
-job.start();
+},3*60*1000);//3m
+if(api.config.range.first){
+    var t = api.config.range.first;
+    for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
+}
 
 
 function get(url){
 	return new Promise(function(resolve, reject){
 		console.log(url);
 		var request=http.request(url, function(res){
+            if(res.statusCode!=200)reject(res.statusCode);
 				var bufs = []; 
 				res.on('data', function(chunk){bufs.push(chunk);});
 				res.on('end', function(){
@@ -96,7 +96,7 @@ function get(url){
 		});
 		request.on('error', function(e){reject(e);});
 		request.setHeader("accept-encoding","gzip");
-		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.4.0)');
+		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.12.0)');
 		request.end();
 	});
 }
@@ -104,7 +104,10 @@ function readLine(url,callback){
 	return get(url).then(function(body){
 		var x = body.split(/\r\n|\r|\n/);
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
-	}).catch(function(e){if(e.code!="ECONNREFUSED")console.log(e);});
+	}).catch(function(e){
+        console.log("error");
+        if(e.code!="ECONNREFUSED"&&e.code!="ETIMEDOUT"&&e.code!="ENOTFOUND")console.log(e);
+    });
 }
 
 var range = 7;

@@ -30,7 +30,7 @@ function have(req, res) {
 	);
 }
 function get(req, res) {
-	api.thread.get(req.params.file,{time:req.params.time}).then(function(rows){
+	api.thread.get(req.params.file,{time:req.params.time}).then(api.attach).then(function(rows){
 		var str ="";
 		for(var i=0; i<rows.length; i++){
 			if(i>0)str+="\n";

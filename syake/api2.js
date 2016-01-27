@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var escape = require('escape-html');
 var EventEmitter = require('events').EventEmitter;
 var request = require('request');
+var fs = require('fs');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -27,6 +28,7 @@ exports.threads = {
 		if(option.time)s+=times(option.time);
 		if(option.sort)s+=" order by stamp desc";
 		if(option.limit)s+=" limit "+option.limit;
+        if(option.addDate)return sqlGet("threads",s).then(exports.addDate);
 		return sqlGet("threads",s);
 	},
 	create:function(title){
@@ -61,7 +63,6 @@ exports.thread = {
 		return sqlGet(file,s+" order by stamp asc");
 	},
 	post:function(file,stamp,id,body){
-		console.log(file,stamp,id,body.substring(0,16));
 		if(!body)throw new Error("Empty Message");
 		var md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
@@ -92,23 +93,37 @@ function add(file,stamp,id,content){
             sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
                 db.serialize(function() {
                     if(rows.length==0){
+                         if(content.indexOf("attach:")!=-1){
+                            var suffix = content.match(/suffix:([^(<>)]*)/)[1];
+                            var attach = content.match(/attach:([^(<>)]*)/)[1];
+                            var data = new Buffer(attach,"base64");
+                            var md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
+                            var name = md5+"."+suffix;
+                            content = content.replace(/attach:[^(<>)]*/g,("attach:"+name));
+                            console.log(name);
+                            fs.writeFile("./cache/"+name,data,function(err){if(err)console.log(err);});
+                         }
                         db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
 		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, content);
-                        exports.update.emit('update',file,stamp,id);
-                        exports.recent.push({
-                            title:exports.getTitle(file),
-                            file:file,
-                            stamp:stamp,
-                            id:id,
-                            content:content
-                        });
-                        cleanRecent();
+                        exports.update.emit('update',file,stamp,id,content);
                     }
                     resolve();
                 });
-            }).catch(function(err){reject();});
+            }).catch(function(err){reject(err);});
         });
 }
+
+exports.update.on("update",function(file,stamp,id,content){
+    console.log(file,stamp,id,content.substring(0,16));
+    exports.recent.push({
+        title:exports.getTitle(file),
+        file:file,
+        stamp:stamp,
+        id:id,
+        content:content
+    });
+    cleanRecent();
+});
 function cleanRecent(){
     var list = exports.recent;
     var t = now()-24*60*60*7;
@@ -120,6 +135,10 @@ function cleanRecent(){
 var nextAction =[];
 function transaction(p){
     if(!p)return;
+    if(nextAction.length>0){
+        nextAction.push(p);
+        return;
+    }
             db.exec("BEGIN EXCLUSIVE",function(err){
             if(err){
                 nextAction.push(p);
@@ -142,7 +161,7 @@ exports.addDate = function(rows){
 		time = new Date(rows[i].stamp*1000).toString();
 		rows[i].date = time.substring(0,time.lastIndexOf(" GMT"));
 	}
-	return Promise.resolve(rows);
+	return rows;
 };
 exports.convert = function(rows){
 	var r = new Array(rows.length);
@@ -161,29 +180,36 @@ exports.convert = function(rows){
 	return r;
 };
 
+exports.attach=function(rows){
+    try{
+    for(var i=0;i<rows.length;i++){
+        var s = rows[i].content;
+        if(s.indexOf("attach:")==-1)continue;
+        var j = s.match(/attach:([^(<>)]*)/);
+        var buf = fs.readFileSync("./cache/"+j[1]);
+        rows[i].content=s.replace(/attach:([^(<>)]*)/,buf.toString("base64"));
+    }
+    }catch(e){console.log(e);}
+    return rows;
+};
+
 exports.notice=function(file,node){
     var unkownThreads = exports.unkownThreads;
     for(var i=0;i<unkownThreads.length;i++){
         if(unkownThreads[i].file==file)return;
     }
-    unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:exports.getTitle(file)});
-}
+    var title = exports.getTitle(file);
+    unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:title});
+    exports.update.emit("notice",file,title,node);
+};
 
 function encode(s){
- var output = "";
- var x = 0;
- for(var i=0; i<s.length; ++i){
-  x = s.charCodeAt(i);
-  output += (x<0x80)?x.toString(16).toUpperCase():s.charAt(i);
- }
- return encodeURIComponent(output).replace(/%/g,"");
+    return new Buffer(s).toString("hex").toUpperCase();
 }
 function threadFile(title){return "thread_"+encode(title);};
 
 function decode(s){
- var output = "";
- for(var i=0; i<s.length; ++i){output+=((i%2==0)?"%":"")+s.charAt(i);}
- return decodeURIComponent(output);
+    return new Buffer(s.toLowerCase(),"hex").toString();
 }
 exports.getTitle = function(file){return decode(file.substring("thread_".length));};
 

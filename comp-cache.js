@@ -10,6 +10,7 @@ exports.get = function(req,res,next){
         }
         res.setHeader("Etag",x.etag);
         res.setHeader("Cache-Control","public, max-age=86400, must-revalidate");
+        res.setHeader("Vary","Accept-Encoding");
         var etag =req.headers['if-none-match'];
         if(x.etag==etag){
             res.sendStatus(304);
@@ -18,7 +19,6 @@ exports.get = function(req,res,next){
         var encoding =req.headers['accept-encoding']||"";
         if(encoding.indexOf("gzip")!=-1){
             res.setHeader("Content-Encoding","gzip");
-            res.setHeader("Vary","Accept-Encoding");
             res.end(x.body);
         }else{
             zlib.gunzip(x.body, function (err, binary) {
@@ -31,6 +31,7 @@ exports.put=function(req,res){
        var etag=exports.add(req.url,html);
        res.setHeader("Etag",etag);
        res.setHeader("Cache-Control","public, max-age=86400, must-revalidate");
+       res.setHeader("Vary","Accept-Encoding");
        res.end(html);
    };
 };

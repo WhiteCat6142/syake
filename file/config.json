@@ -9,9 +9,10 @@
         "133.130.115.168/devel/server_api",
         "45.56.121.29:48888/server"],
     "range":{
-        "node":1,
+        "node":2,
         "head":4,
-        "newTread":90
+        "newTread":90,
+        "first":1
     },
     "feed":{
     "title": "shinGETsu",

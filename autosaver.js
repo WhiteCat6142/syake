@@ -12,6 +12,7 @@ exports.sync = function(file,type,option){
 	o=option.reader(fs.readFileSync(file,"utf-8")||"{}");
 	fs.watch(file,function(event,filename){
 		fs.readFile(file,"utf-8",function(err,data){
+            if(err)return;
 		console.log(data);
 		console.log(event);
 		o=option.reader(data);

@@ -2,21 +2,14 @@ var api = require('./api2');
 var cache = require("../comp-cache");
 var RSS = require('rss');
 
-api.update.on("update",function(file,stamp,id){
-    cache.clear();
-})
-Object.observe(api.unkownThreads, function(changes){
-    cache.clear();
-});
-
 var tags =["a","b","c"];
 function index(req, res) {
- api.threads.get({limit:15,sort:true}).then(api.addDate).then(function(threads) {
+ api.threads.get({limit:15,sort:true,addDate:true}).then(function(threads) {
   res.render('index',{threads:threads,tags:tags,x:api.unkownThreads},cache.put(req,res));
  });
 }
 function changes(req, res) {
- api.threads.get({sort:true,tag:req.query.tag}).then(api.addDate).then(function(threads) {
+ api.threads.get({sort:true,tag:req.query.tag,addDate:true}).then(function(threads) {
   res.render('index',{threads:threads,tags:tags,x:api.unkownThreads},cache.put(req,res));
  });
 }
@@ -25,7 +18,8 @@ function thread(req, res){
  var title = req.params.id;
  api.threads.info({title:title}).then(function(row){
    var file = row.file;
-   api.thread.get(file,{}).then(api.convert)
+   var offset = Math.max(row.records-10,0);
+   api.thread.get(file,{limit:10,offset:offset}).then(api.convert)
    .then(function(rows){res.render('bbs', { title: title, messages: rows,file: file},cache.put(req,res));
    });
  }).catch(function(){res.sendStatus(404);});
@@ -46,7 +40,7 @@ function rss(req,res){
     for(var i=0;i<recent.length;i++){
         var x = recent[i];
         rss.item({
-            url: "/thread.cgi/" + encodeURIComponent(x.title) + "/" + x.id,
+            url:("/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
             title:x.title,
             description:bodys[i].body,
             date:bodys[i].date,
