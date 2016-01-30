@@ -91,7 +91,6 @@ var porto=exports.config.porto;
 function add(file,stamp,id,content){
     transaction(function(resolve, reject) {
             sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
-                db.serialize(function() {
                     if(rows.length==0){
                          if(content.indexOf("attach:")!=-1){
                             var suffix = content.match(/suffix:([^(<>)]*)/)[1];
@@ -103,12 +102,15 @@ function add(file,stamp,id,content){
                             console.log(name);
                             fs.writeFile("./cache/"+name,data,function(err){if(err)console.log(err);});
                          }
-                        db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
-		                db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, content);
-                        exports.update.emit('update',file,stamp,id,content);
+                         exports.update.emit('update',file,stamp,id,content);
+                         db.serialize(function() {
+                          db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
+		                  db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, content);
+                          resolve();
+                         });
+                    }else{
+                        resolve();
                     }
-                    resolve();
-                });
             }).catch(function(err){reject(err);});
         });
 }
@@ -135,15 +137,12 @@ function cleanRecent(){
 var nextAction =[];
 function transaction(p){
     if(!p)return;
-    if(nextAction.length>0){
-        nextAction.push(p);
-        return;
-    }
             db.exec("BEGIN EXCLUSIVE",function(err){
             if(err){
                 nextAction.push(p);
                 return;
             }
+            //var timeout = new Promise(function(resolve, reject) {setTimeout(reject,3000);});
             new Promise(p).then(
                 function(){db.exec("COMMIT");}
                 ,function(err){db.exec("ROLLBACK");}

@@ -21,12 +21,21 @@ function dat(req,res){
         }
         var file = row.file;
         api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
+            var idlist = rows.map(function(ele){return ele.id.substr(0,8);});
         for(var i=0;i<rows.length;i++){
+            var body = rows[i].body;
+            var b1 = body.match(/&gt;&gt;\w{8}/g);
+            if(b1){
+                b1.forEach(function(ele){
+                    var index = idlist.indexOf(ele.substr(8,8))+1;
+                    body=body.replace(ele,"&gt;&gt;"+index);
+                });
+            }
             res.write(en(([
                 rows[i].name,
                 rows[i].mail,
                 rows[i].date+" ID:"+rows[i].id,
-                rows[i].body,
+                body,
                 (i==0)?row.title:""
             ].join("<>")+"\n")));
         }
