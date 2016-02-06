@@ -2,15 +2,20 @@ var zlib = require('zlib');
 var cache = require('memory-cache');
 var crypto = require('crypto');
 
+function setHeaders(res,etag,option){
+    res.setHeader("Etag",etag);
+    if(option&&option.type)res.setHeader("Content-Type",option.type);
+    res.setHeader("Cache-Control","public, max-age=86400, must-revalidate");
+    res.setHeader("Vary","Accept-Encoding");
+}
+
 exports.get = function(req,res,next){
         var x = cache.get(req.url);
         if(!x){
             next();
             return;
         }
-        res.setHeader("Etag",x.etag);
-        res.setHeader("Cache-Control","public, max-age=86400, must-revalidate");
-        res.setHeader("Vary","Accept-Encoding");
+        setHeaders(res,x.etag,x.option);
         var etag =req.headers['if-none-match'];
         if(x.etag==etag){
             res.sendStatus(304);
@@ -26,19 +31,26 @@ exports.get = function(req,res,next){
             });
         }
 };
-exports.put=function(req,res){
-   return function(err,html){
-       var etag=exports.add(req.url,html);
-       res.setHeader("Etag",etag);
-       res.setHeader("Cache-Control","public, max-age=86400, must-revalidate");
-       res.setHeader("Vary","Accept-Encoding");
+exports.put=function(req,res,next){
+   var option = {type:"text/html"};
+   var re = function(err,html){
+       var etag=exports.add(req.url,html,option);
+       setHeaders(res,etag,option);
        res.end(html);
    };
+   res.renderX=function(view,local){return res.render(view,local,re);};
+   res.endX=function(data){
+       var option={type:res.getHeader('content-type')};
+       var etag=exports.add(req.url,data,option);
+       setHeaders(res,etag,option)
+       return res.end(data);
+   };
+   next();
 };
-exports.add=function(url,data){
+exports.add=function(url,data,option){
     var etag = "W/\""+crypto.createHash('md5').update(data, 'utf8').digest('hex')+"\"";
     zlib.gzip(new Buffer(data),function (err, binary) {
-        cache.put(url,{body:binary,etag:etag},60*60*1000);//1h
+        cache.put(url,{body:binary,etag:etag,option:option},60*60*1000);//1h
     });
     return etag;
 };

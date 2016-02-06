@@ -19,6 +19,7 @@ exports.recent=[];
 exports.update=new EventEmitter();
 
 exports.unkownThreads=[];
+exports.deleted=[];
 
 exports.config=undefined;
 
@@ -64,11 +65,22 @@ exports.thread = {
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
+        if(body.match(exports.config.spam)){
+            db.run("INSERT INTO spam(id) VALUES(?)",id);
+            throw "Spam";
+        }
 		var md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
 		else{id=md5;}
         add(file,stamp,id,body);
 	}
+};
+
+exports.spam=function(id){
+    return sqlGet("spam"," where id='"+id+"'").then(function(rows){
+        if(rows.length==0)return Promise.resolve();
+        else return Promise.reject();
+    });
 };
 
 exports.post=function(file,name,mail,body,time,subject){
@@ -175,6 +187,7 @@ exports.convert = function(rows){
 			var x = content[j].match(/([a-z]*):(.*)/);
 			if(x)r[i][x[1]]=x[2];
 		}
+        r[i].body=r[i].body||"";
 	}
 	return r;
 };

@@ -1,26 +1,27 @@
 {
     "vistor":"(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)",
     "user":"admin:p0ss",
+    "host":"http://10.0.0.131:3000",
     "//porto":"http://shingetsu.ygch.net/mobile.cgi",
     "nodes":[
         "127.0.0.1:8080/server.cgi",
         "node.shingetsu.info:8000/server.cgi",
         "shingetsu.ygch.net:80/server.cgi",
-        "133.130.115.168/devel/server_api",
-        "45.56.121.29:48888/server"],
+        "133.130.115.168/stable/server_api"],
     "range":{
         "node":2,
         "head":4,
         "newTread":90,
-        "first":1
+        "first":0
     },
     "feed":{
-    "title": "shinGETsu",
-    "description": "shinGETsu's comments",
-    "feed_url": "/gateway.cgi/rss",
-    "site_url": "http://10.0.0.131:3000",
-    "image_url": "/favicon.ico",
-    "author": "WhiteCat6142",
-    "language": "ja"
-    }
+        "title": "shinGETsu",
+        "description": "shinGETsu's comments",
+        "feed_url": "/gateway.cgi/rss",
+        "site_url": "http://10.0.0.131:3000",
+        "image_url": "/favicon.ico",
+        "author": "WhiteCat6142",
+        "language": "ja"
+    },
+    "spam":["(https?://.+){4}.+"]
 }

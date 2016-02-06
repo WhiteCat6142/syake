@@ -45,7 +45,7 @@ function readHead(node,file){
 			if(i==-1){
 				var x=body.split("<>");
                 list[i]=undefined;
-				update(file,x[0],x[1],node);
+                api.spam(x[1]).then(function(){update(file,x[0],x[1],node);});
 			}
 		});
 	});

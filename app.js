@@ -9,9 +9,6 @@ var cache = require("./comp-cache");
 
 api.config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
 
-api.update.on("update",cache.clear);
-api.update.on("notice",cache.clear);
-
 app.use(function(req, res, next){
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
@@ -19,6 +16,9 @@ app.use(function(req, res, next){
 app.use(logger('dev'));
 
 app.use(cache.get);
+app.use(cache.put);
+api.update.on("update",cache.clear);
+api.update.on("notice",cache.clear);
 
 app.use(compression({threshold:0}));
 
@@ -38,8 +38,6 @@ jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
 
 
-require('./syake/gateway').set(app);
-
 var admin = express.Router();
 app.use("/admin.cgi",admin);
 require('./syake/admin').set(admin);
@@ -48,7 +46,13 @@ var server = express.Router();
 app.use("/server.cgi",server);
 require('./syake/server').set(server);
 
-require('./syake/dat').set(app);
+var dat = express.Router();
+app.use("/",dat);
+require('./syake/dat').set(dat);
+
+var gateway = express.Router();
+app.use("/",gateway);
+require('./syake/gateway').set(gateway);
 
 //require('./syake/apollo');
 
