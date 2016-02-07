@@ -1,6 +1,6 @@
 var api = require('./api2');
 var nodeManeger = require('./cron');
-var cache =require('memory-cache');
+var cache =require('comp-cache');
 
 exports.set=function(app){
 app.use(function(req, res, next){

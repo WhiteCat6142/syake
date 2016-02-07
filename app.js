@@ -5,7 +5,7 @@ var compression = require('compression');
 var logger = require("morgan");
 var jade = require("jade");
 var api = require("./syake/api2");
-var cache = require("./comp-cache");
+var cache = require("comp-cache");
 
 api.config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
 

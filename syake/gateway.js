@@ -1,5 +1,5 @@
 var api = require('./api2');
-var cache = require("../comp-cache");
+var cache = require("comp-cache");
 var RSS = require('rss');
 
 var tags =["a","b","c"];
