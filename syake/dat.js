@@ -50,6 +50,19 @@ function post(req, res){
  res.end(msg);
 }
 
+function read(req,res){
+    api.threads.info({dat:req.params.dat}).then(function(row){
+        var title = encodeURIComponent(row.title);
+        var id = req.params.id|0;
+        if(!id)res.redirect("/thread.cgi/"+title);
+        else{
+            api.thread.get(row.file,{offset:id-1,limit:1}).then(function(rows){
+                res.redirect("/thread.cgi/"+title+"/"+rows[0].id);
+            });
+        }
+    });
+}
+
 function de(str){
  var output = "";
  for(var i=0; i<str.length; ++i){
@@ -70,4 +83,6 @@ exports.set=function(app){
 app.get('/2ch/subject.txt',subject);
 app.get('/2ch/dat/:dat',dat);
 app.post('/test/bbs.cgi',post);
+app.get('/test/read.cgi/2ch/:dat',read);
+app.get('/test/read.cgi/2ch/:dat/:id',read);
 };

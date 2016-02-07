@@ -32,7 +32,6 @@ app.set('view engine', 'jade');
 app.set('views', './views');
 
 var options = {cache: true};
-
 jade.compileFile('./views/base.jade', options);
 jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
