@@ -19,6 +19,7 @@ api.update.on("update",function(file,stamp,id){
 
 function update(file,stamp,id,node){
 	console.log("update:"+file+stamp+id+node);
+    api.spam(id).then(function(){
 	api.thread.get(file,{time:stamp,id:id}).then(function(rows){
 		if(rows.length!=0)return;
 		readLine(nodeUrl(node,"get")+"/"+file+"/"+stamp+"/"+id,function(body){
@@ -26,6 +27,7 @@ function update(file,stamp,id,node){
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp,id,x[3]);
 		});
 	});
+    });
 }
 function readAll(node,file){
     api.threads.create(api.getTitle(file));
@@ -40,14 +42,33 @@ function readHead(node,file){
 		for(var i=0;i<rows.length;i++){
 			list[i]=rows[i].stamp+"<>"+rows[i].id;
 		}
+        var num=0;
+        var len=list.length;
+        var next=[];
 		readLine(nodeUrl(node,"head")+"/"+file+"/"+time(api.config.range.head),function(body){
             var i=list.indexOf(body);
 			if(i==-1){
-				var x=body.split("<>");
+                next.push(body);
+			}else{
                 list[i]=undefined;
-                api.spam(x[1]).then(function(){update(file,x[0],x[1],node);});
-			}
-		});
+                num++;
+            }
+		},function(){
+            var per=next.length;
+            if(per==0)return;
+            var c=false;
+            if(len==0){c=(per>30);}else{c=((per*3>len)||(num*2<len));}
+            if(c){
+                console.log("immunity:"+len+" "+per+" "+num+" in "+node+" at "+file);
+                return;
+            }
+            // when new>0 and old>0 , it must be new:old<=1:3 match:old>=1:2
+            //limit new<=30
+            for(var i=0;i<next.length;i++){
+                var x = next[i].split("<>");
+                update(file,x[0],x[1],node);
+            }
+        });
 	});
 }
 function readNode(node,t){
@@ -100,10 +121,11 @@ function get(url){
 		request.end();
 	});
 }
-function readLine(url,callback){
+function readLine(url,callback,done){
 	return get(url).then(function(body){
 		var x = body.split(/\r\n|\r|\n/);
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
+        if(done)done();
 	}).catch(function(e){
         console.log("error");
         if(e.code!="ECONNREFUSED"&&e.code!="ETIMEDOUT"&&e.code!="ENOTFOUND")console.log(e);
