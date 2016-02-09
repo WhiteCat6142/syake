@@ -11,8 +11,9 @@
     "range":{
         "node":2,
         "head":4,
-        "newTread":90,
-        "first":0
+        "newThread":90,
+        "first":0,
+        "interval":210000
     },
     "feed":{
         "title": "shinGETsu",

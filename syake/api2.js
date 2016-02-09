@@ -34,7 +34,7 @@ exports.threads = {
 	},
 	create:function(title){
       var t = now();
-	  var dat = t+".dat";
+	  var dat = t;
 	  var file = threadFile(title);
       var l=exports.unkownThreads;
       for(var i=0;i<l.length;i++){

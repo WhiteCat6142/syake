@@ -3,6 +3,14 @@ var iconv = require('iconv-lite');
 
 function subject(req,res){
     api.threads.get({sort:true}).then(function(rows){
+        res.setHeader("Last-Modified",new Date(rows[0].stamp).toString());
+        var t = req.headers["if-modified-since"];
+        if(t){
+            if(rows[0].stamp<=Math.round(new Date(t).getTime()/1000)){
+            res.sendStatus(304);
+            return;
+            }
+        }
         for(var i=0;i<rows.length;i++){
             res.write(en((rows[i].dat+".dat<>"+rows[i].title+" ("+rows[i].records+")\n")));
         }
@@ -56,8 +64,8 @@ function read(req,res){
         var id = req.params.id|0;
         if(!id)res.redirect("/thread.cgi/"+title);
         else{
-            api.thread.get(row.file,{offset:id-1,limit:1}).then(function(rows){
-                res.redirect("/thread.cgi/"+title+"/"+rows[0].id);
+            api.thread.get(row.file,{sort:true}).then(function(rows){
+                res.redirect("/thread.cgi/"+title+"/"+rows[id-1].id);
             });
         }
     });

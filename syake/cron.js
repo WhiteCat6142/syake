@@ -56,8 +56,8 @@ function readHead(node,file){
 		},function(){
             var per=next.length;
             if(per==0)return;
-            var c=false;
-            if(len==0){c=(per>30);}else{c=((per*3>len)||(num*2<len));}
+            var c=(len==0)?(per>30):((num*3<len)||(per>len*5));
+            //len 0:30 10:10 20:20
             if(c){
                 console.log("immunity:"+len+" "+per+" "+num+" in "+node+" at "+file);
                 return;
@@ -91,7 +91,8 @@ function readNode(node,t){
 setInterval(function(){
         if(!this.numt||this.numt>=nodes.length)this.numt=0;
         readNode(nodes[this.numt++]);
-},3*60*1000);//3m
+},api.config.range.interval);
+
 if(api.config.range.first){
     var t = api.config.range.first;
     for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
