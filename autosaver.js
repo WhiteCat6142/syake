@@ -1,4 +1,6 @@
-var fs = require('fs');
+"use strict";
+
+const fs = require('fs');
 
 //acress o=sync("sample.json","json",{readonly:true});o.something
 

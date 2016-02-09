@@ -1,10 +1,12 @@
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('record.sqlite3');
-var crypto = require('crypto');
-var escape = require('escape-html');
-var EventEmitter = require('events').EventEmitter;
-var request = require('request');
-var fs = require('fs');
+"use strict";
+
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('record.sqlite3');
+const crypto = require('crypto');
+const escape = require('escape-html');
+const EventEmitter = require('events').EventEmitter;
+const request = require('request');
+const fs = require('fs');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -33,10 +35,10 @@ exports.threads = {
 		return sqlGet("threads",s);
 	},
 	create:function(title){
-      var t = now();
-	  var dat = t;
-	  var file = threadFile(title);
-      var l=exports.unkownThreads;
+      const t = now();
+	  const dat = t;
+	  const file = threadFile(title);
+      const l=exports.unkownThreads;
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
@@ -69,7 +71,7 @@ exports.thread = {
             db.run("INSERT INTO spam(id) VALUES(?)",id);
             throw "Spam";
         }
-		var md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
+		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
 		else{id=md5;}
         add(file,stamp,id,body);
@@ -85,9 +87,9 @@ exports.spam=function(id){
 
 exports.post=function(file,name,mail,body,time,subject){
 //if(subject)exports.threads.create(subject);
-var porto=exports.config.porto;
+const porto=exports.config.porto;
     if(porto){
-        var req ={cmd:"post",file:file,name:name,mail:mail,body:body,dopost:"dopost",error:""};
+        const req ={cmd:"post",file:file,name:name,mail:mail,body:body,dopost:"dopost",error:""};
         request.post(porto,{form:req});
         return;
     }
@@ -105,11 +107,11 @@ function add(file,stamp,id,content){
             sqlGet(file," where stamp="+stamp+" and id=\""+id+"\"").then(function(rows){
                     if(rows.length==0){
                          if(content.indexOf("attach:")!=-1){
-                            var suffix = content.match(/suffix:([^(<>)]*)/)[1];
-                            var attach = content.match(/attach:([^(<>)]*)/)[1];
-                            var data = new Buffer(attach,"base64");
-                            var md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
-                            var name = md5+"."+suffix;
+                            const suffix = content.match(/suffix:([^(<>)]*)/)[1];
+                            const attach = content.match(/attach:([^(<>)]*)/)[1];
+                            const data = new Buffer(attach,"base64");
+                            const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
+                            const name = md5+"."+suffix;
                             content = content.replace(/attach:[^(<>)]*/g,("attach:"+name));
                             console.log(name);
                             fs.writeFile("./cache/"+name,data,function(err){if(err)console.log(err);});
@@ -139,8 +141,8 @@ exports.update.on("update",function(file,stamp,id,content){
     cleanRecent();
 });
 function cleanRecent(){
-    var list = exports.recent;
-    var t = now()-24*60*60*7;
+    const list = exports.recent;
+    const t = now()-24*60*60*7;
     while(list[0].stamp<t){
         list.shift();
     }
@@ -206,11 +208,11 @@ exports.attach=function(rows){
 };
 
 exports.notice=function(file,node){
-    var unkownThreads = exports.unkownThreads;
+    const unkownThreads = exports.unkownThreads;
     for(var i=0;i<unkownThreads.length;i++){
         if(unkownThreads[i].file==file)return;
     }
-    var title = exports.getTitle(file);
+    const title = exports.getTitle(file);
     unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:title});
     exports.update.emit("notice",file,title,node);
 };
@@ -228,7 +230,7 @@ exports.getTitle = function(file){return decode(file.substring("thread_".length)
 function now(){return Math.round(new Date().getTime()/1000);}
 
 function times(time){
-	var x = time.split("-");
+	const x = time.split("-");
 	var s=" where stamp ";
 	if(x.length==1)return s+"= "+x[0];
 	if(x[1]=="")return s+">= "+x[0];

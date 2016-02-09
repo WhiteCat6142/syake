@@ -1,5 +1,7 @@
-var api = require('./api2');
-var nodeManeger = require('./cron');
+"use strict";
+
+const api = require('./api2');
+const nodeManeger = require('./cron');
 var nodes = nodeManeger.nodes;
 
 function ping(req, res) {
@@ -10,16 +12,16 @@ function node(req, res) {
 	//res.end(nodes[Math.floor(Math.random()*nodes.length)]);
 }
 function join(req, res) {
- var node = req.node;
+ const node = req.node;
  res.end("WELCOME");
  nodeManeger.ping(node).then(function(isAlive){
 	 if(nodes.indexOf(node)==-1)nodes.push(node);
  }).catch(onErr(res));
 }
 function bye(req, res) {
- var node = req.node;
+ const node = req.node;
  if(!node.startsWith(req.ip))throw "ip doesn't match the node";
- var i=nodes.indexOf(node);
+ const i=nodes.indexOf(node);
  if(i!=-1)delete nodes[i];
  res.end("BYEBYE");
 }

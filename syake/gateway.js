@@ -1,6 +1,7 @@
-var api = require('./api2');
-var cache = require("comp-cache");
-var RSS = require('rss');
+"use strict";
+
+const api = require('./api2');
+const RSS = require('rss');
 
 var tags =["a","b","c"];
 function index(req, res) {
@@ -15,10 +16,10 @@ function changes(req, res) {
 }
 
 function thread(req, res){
- var title = req.params.id;
+ const title = req.params.id;
  api.threads.info({title:title}).then(function(row){
-   var file = row.file;
-   var offset = Math.max(row.records-10,0);//limit:10,offset:offset
+   const file = row.file;
+   const offset = Math.max(row.records-10,0);//limit:10,offset:offset
    api.thread.get(file,{}).then(api.convert)
    .then(function(rows){res.renderX('bbs', { title: title, messages: rows,file: file});
    });
@@ -26,7 +27,7 @@ function thread(req, res){
 }
 
 function post(req, res){
-var b =req.body;
+const b =req.body;
  if(b.cmd!="post")return;
 api.post({file:b.file},b.name,b.mail,b.body,undefined);
 res.redirect('back');
@@ -34,9 +35,9 @@ res.redirect('back');
 
 function rss(req,res){
     res.setHeader("Content-Type","text/xml; charset=UTF-8");
-    var rss = new RSS(api.config.feed);
-    var recent = JSON.parse(JSON.stringify(api.recent)).reverse();
-    var bodys=api.convert(recent);
+    const rss = new RSS(api.config.feed);
+    const recent = JSON.parse(JSON.stringify(api.recent)).reverse();
+    const bodys=api.convert(recent);
     for(var i=0;i<recent.length;i++){
         var x = recent[i];
         rss.item({

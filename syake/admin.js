@@ -1,10 +1,12 @@
-var api = require('./api2');
-var nodeManeger = require('./cron');
-var cache =require('comp-cache');
+"use strict";
+
+const api = require('./api2');
+const nodeManeger = require('./cron');
+const cache =require('comp-cache');
 
 exports.set=function(app){
 app.use(function(req, res, next){
-    var user = req.headers["authorization"];
+    const user = req.headers["authorization"];
   if(!user){
       res.setHeader("WWW-Authenticate","Basic realm=\"ADMIN ACTION\"");
       res.sendStatus(401);
@@ -19,23 +21,23 @@ app.get('/',function(req,res){
     res.render('admin',{nodes:nodeManeger.nodes});
 });
 app.post('/node',function(req,res){
-    var node = req.body.node;
+    const node = req.body.node;
     if(node.startsWith("del ")){}
      else {nodeManeger.nodes.push(node);}
     res.redirect("back");
 });
 app.get('/refresh',function(req,res){
-    var a = nodeManeger.nodes;
+    const a = nodeManeger.nodes;
     for(var i=0; i<a.length; i++){nodeManeger.read(a[i]);}
     cache.clear();
     res.redirect("back");
 });
 
 app.get('/new/:node/:file',function(req,res){
-    var file = req.params.file;
+    const file = req.params.file;
     nodeManeger.readAll(req.params.node.replace("+","/"),file);
     api.threads.info({file:file}).then(function(row){
-        var title = encodeURIComponent(row.title);
+        const title = encodeURIComponent(row.title);
         setTimeout(function(){
             res.redirect("/thread.cgi/"+title);
         },10);

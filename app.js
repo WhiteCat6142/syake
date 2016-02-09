@@ -1,11 +1,13 @@
-var http = require('http');
-var express = require('express');
-var app = express();
-var compression = require('compression');
-var logger = require("morgan");
-var jade = require("jade");
-var api = require("./syake/api2");
-var cache = require("comp-cache");
+"use strict";
+
+const http = require('http');
+const express = require('express');
+const app = express();
+const compression = require('compression');
+const logger = require("morgan");
+const jade = require("jade");
+const api = require("./syake/api2");
+const cache = require("comp-cache");
 
 api.config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
 
@@ -25,31 +27,31 @@ app.use(compression({threshold:0}));
 app.use("/",express.static('www',{maxAge:86400000*7}));
 app.use("/file",express.static('cache',{maxAge:86400000*7}));
 
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.set('view engine', 'jade');
 app.set('views', './views');
 
-var options = {cache: true};
+const options = {cache: true};
 jade.compileFile('./views/base.jade', options);
 jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
 
 
-var admin = express.Router();
+const admin = express.Router();
 app.use("/admin.cgi",admin);
 require('./syake/admin').set(admin);
 
-var server = express.Router();
+const server = express.Router();
 app.use("/server.cgi",server);
 require('./syake/server').set(server);
 
-var dat = express.Router();
+const dat = express.Router();
 app.use("/",dat);
 require('./syake/dat').set(dat);
 
-var gateway = express.Router();
+const gateway = express.Router();
 app.use("/",gateway);
 require('./syake/gateway').set(gateway);
 
