@@ -4,16 +4,18 @@
     "host":"http://10.0.0.131:3000",
     "//porto":"http://shingetsu.ygch.net/mobile.cgi",
     "nodes":[
-        "127.0.0.1:8080/server.cgi",
         "node.shingetsu.info:8000/server.cgi",
-        "shingetsu.ygch.net:80/server.cgi",
-        "133.130.115.168/stable/server_api"],
+        "ygg.io/server",
+        "133.130.115.168/stable/server_api",
+        "shingetu.fe100.net:8000/server.cgi",
+        "rep4649.ddo.jp:8000/server.cgi",
+        ""],
     "range":{
         "node":2,
         "head":4,
         "newThread":90,
         "first":0,
-        "interval":210000
+        "interval":200
     },
     "feed":{
         "title": "shinGETsu",

@@ -8,7 +8,7 @@ function ping(req, res) {
 	res.end("PONG\n"+req.ip);
 }
 function node(req, res) {
-    res.end("localhost:3000/server.cgi");
+    res.end("67.174.251.214:3000/server.cgi");
 	//res.end(nodes[Math.floor(Math.random()*nodes.length)]);
 }
 function join(req, res) {
@@ -20,7 +20,7 @@ function join(req, res) {
 }
 function bye(req, res) {
  const node = req.node;
- if(!node.startsWith(req.ip))throw "ip doesn't match the node";
+ //if(!node.startsWith(req.ip))throw "ip doesn't match the node";
  const i=nodes.indexOf(node);
  if(i!=-1)delete nodes[i];
  res.end("BYEBYE");

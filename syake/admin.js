@@ -6,14 +6,14 @@ const cache =require('comp-cache');
 
 exports.set=function(app){
 app.use(function(req, res, next){
-    const user = req.headers["authorization"];
+  var user = req.headers["authorization"];
   if(!user){
       res.setHeader("WWW-Authenticate","Basic realm=\"ADMIN ACTION\"");
       res.sendStatus(401);
   }else{
       user=new Buffer(user.substr("Basic ".length), 'base64').toString();
       if(api.config.user==user){next();}
-      else{res.sendStatus(403);}
+      else{res.sendStatus(400);}
   }
 });
     

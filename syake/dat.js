@@ -5,18 +5,11 @@ const iconv = require('iconv-lite');
 
 function subject(req,res){
     api.threads.get({sort:true}).then(function(rows){
-        res.setHeader("Last-Modified",new Date(rows[0].stamp).toString());
-        const t = req.headers["if-modified-since"];
-        if(t){
-            if(rows[0].stamp<=Math.round(new Date(t).getTime()/1000)){
-            res.sendStatus(304);
-            return;
-            }
-        }
+        var x =[];
         for(var i=0;i<rows.length;i++){
-            res.write(en((rows[i].dat+".dat<>"+rows[i].title+" ("+rows[i].records+")\n")));
+            x.push(en((rows[i].dat+".dat<>"+rows[i].title+" ("+rows[i].records+")\n")));
         }
-        res.end();
+        res.endX(Buffer.concat(x));
     });
 }
 function dat(req,res){
@@ -31,7 +24,7 @@ function dat(req,res){
         }
         const file = row.file;
         api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
-            const idlist = rows.map(function(ele){return ele.id.substr(0,8);});
+        var idlist = [];
         for(var i=0;i<rows.length;i++){
             var body = rows[i].body;
             var b1 = body.match(/&gt;&gt;\w{8}/g);
@@ -41,6 +34,7 @@ function dat(req,res){
                     body=body.replace(ele,"&gt;&gt;"+index);
                 });
             }
+            idlist.push(rows[i].id.substr(0,8));
             res.write(en(([
                 rows[i].name,
                 rows[i].mail,

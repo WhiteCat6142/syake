@@ -24,7 +24,7 @@ function update(file,stamp,id,node){
     api.spam(id).then(function(){
 	api.thread.get(file,{time:stamp,id:id}).then(function(rows){
 		if(rows.length!=0)return;
-		readLine(nodeUrl(node,"get")+"/"+file+"/"+stamp+"/"+id,function(body){
+		readLine(nodeUrl(node,"get",file)+"/"+stamp+"/"+id,function(body){
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp,id,x[3]);
 		});
@@ -33,13 +33,14 @@ function update(file,stamp,id,node){
 }
 function readAll(node,file){
     api.threads.create(api.getTitle(file));
-    readLine(nodeUrl(node,"get")+"/"+file+"/"+time(api.config.range.newThread),function(body){
+    readLine(nodeUrl(node,"get",file,api.config.range.newThread),function(body){
         const x = body.match(/(\d+)<>(.{32})<>(.*)/);
         api.thread.post(file,x[1],x[2],x[3]);
     });
 }
 function readHead(node,file){
-	api.thread.get(file,{time:time()}).then(function(rows){
+    const t = api.config.range.head;
+	api.thread.get(file,{time:time(t)}).then(function(rows){
 		var list=new Array(rows.length);
 		for(var i=0;i<rows.length;i++){
 			list[i]=rows[i].stamp+"<>"+rows[i].id;
@@ -47,7 +48,7 @@ function readHead(node,file){
         var num=0;
         const len=list.length;
         var next=[];
-		readLine(nodeUrl(node,"head")+"/"+file+"/"+time(api.config.range.head),function(body){
+		readLine(nodeUrl(node,"head",file,t),function(body){
             var i=list.indexOf(body);
 			if(i==-1){
                 next.push(body);
@@ -58,9 +59,9 @@ function readHead(node,file){
 		},function(){
             const per=next.length;
             if(per==0)return;
-            const c=(len==0)?(per>30):((num*3<len)||(per>len*5));
+            const c=(per>30)||(len!=0)&&((num*3<len)||(per>len*30));
             //len 0:30 10:10 20:20
-            if(c){
+            if(false){
                 console.log("immunity:"+len+" "+per+" "+num+" in "+node+" at "+file);
                 return;
             }
@@ -74,18 +75,21 @@ function readHead(node,file){
 	});
 }
 function readNode(node,t){
+    if(!node)return;
 	api.threads.get({}).then(function(rows){
         t = t||api.config.range.node;
-		readLine(nodeUrl(node,"recent")+"/"+time(t),function(body){
+        var done =[];
+		readLine(nodeUrl(node,"recent","",t),function(body){
 			const x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i]&&rows[i].file==x[2]){
+                    if(done.indexOf(x[2])!=-1)return;
+                    done.push(x[2]);
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
-                    rows[i]=undefined;
 					return;
 				}
 			}
-            api.notice(x[2],node)
+            api.notice(x[2],node);
 		});
 	});
 }
@@ -93,7 +97,7 @@ function readNode(node,t){
 setInterval(function(){
         if(!this.numt||this.numt>=nodes.length)this.numt=0;
         readNode(nodes[this.numt++]);
-},api.config.range.interval);
+},api.config.range.interval*1000);
 
 if(api.config.range.first){
     const t = api.config.range.first;
@@ -103,7 +107,6 @@ if(api.config.range.first){
 
 function get(url){
 	return new Promise(function(resolve, reject){
-		console.log(url);
 		const request=http.request(url, function(res){
             if(res.statusCode!=200)reject(res.statusCode);
 				var bufs = []; 
@@ -126,7 +129,7 @@ function get(url){
 }
 function readLine(url,callback,done){
 	return get(url).then(function(body){
-		const x = body.split(/\r\n|\r|\n/);
+		const x = body.split(/[\r\n]+/);
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
         if(done)done();
 	}).catch(function(e){
@@ -152,7 +155,8 @@ exports.update=update;
 exports.read=readNode;
 exports.readAll=readAll;
 
-function nodeUrl(node,m){
-	console.log(m+" "+node);
-	return "http://"+node+"/"+m;
+function nodeUrl(node,m,file,t){
+	if(m=="head"||m=="recent")console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
+    const s = ((file)?"/"+file:"")+((t)?"/"+time(t):"");
+	return "http://"+node+"/"+m+s;
 }

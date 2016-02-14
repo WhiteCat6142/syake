@@ -10,7 +10,8 @@ const fs = require('fs');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
-		db.all("SELECT * FROM "+file+option,o,function(err,rows){
+        o=o||"*";
+		db.all("SELECT "+o+" FROM "+file+option,function(err,rows){
 			if(!err){resolve(rows);}else{reject(err);}
 		});
 	});
@@ -28,9 +29,12 @@ exports.config=undefined;
 exports.threads = {
 	get:function(option){
 		var s="";
+        var o="";
 		if(option.time)s+=times(option.time);
 		if(option.sort)s+=" order by stamp desc";
 		if(option.limit)s+=" limit "+option.limit;
+        if(option.tag){o="*,group_concat(tag) as tags";
+        s+" join (select tag.tag,ttt.id from ttt join tag on ttt.tag = tag.id) on tid=id group by tid;";}
         if(option.addDate)return sqlGet("threads",s).then(exports.addDate);
 		return sqlGet("threads",s);
 	},
@@ -187,7 +191,7 @@ exports.convert = function(rows){
 		content=rows[i].content.split("<>");		
 		for(var j=0;j<content.length;j++){
 			var x = content[j].match(/([a-z]*):(.*)/);
-			if(x)r[i][x[1]]=x[2];
+			if(x)r[i][x[1].replace("_","")]=x[2];
 		}
         r[i].body=r[i].body||"";
 	}
