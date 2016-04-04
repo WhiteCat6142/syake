@@ -2,40 +2,43 @@
 
 const api = require('./api2');
 const iconv = require('iconv-lite');
+const co = require('co');
 
 function subject(req,res){
     api.threads.get({sort:true}).then(function(rows){
-        var x =[];
         for(var i=0;i<rows.length;i++){
-            x.push(en((rows[i].dat+".dat<>"+rows[i].title+" ("+rows[i].records+")\n")));
+            res.writeX(en((rows[i].dat+".dat<>"+rows[i].title+" ("+rows[i].records+")\n")));
         }
-        res.endX(Buffer.concat(x));
+        res.endX();
     });
 }
 function dat(req,res){
     api.threads.info({dat:req.params.dat.slice(0,-4)}).then(function(row){
-        res.setHeader("Last-Modified",new Date(row.stamp).toString());
-        const t = req.headers["if-modified-since"];
-        if(t){
-            if(row.stamp<=Math.round(new Date(t).getTime()/1000)){
-            res.sendStatus(304);
-            return;
-            }
-        }
         const file = row.file;
         api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
+        co(function*() {
         var idlist = [];
         for(var i=0;i<rows.length;i++){
             var body = rows[i].body;
             var b1 = body.match(/&gt;&gt;\w{8}/g);
             if(b1){
-                b1.forEach(function(ele){
+                for(var ele of b1){
                     const index = idlist.indexOf(ele.substr(8,8))+1;
                     body=body.replace(ele,"&gt;&gt;"+index);
-                });
+                }
+            }
+            var b2 = body.match(/\[\[[^\]]*\]\]/g);
+            if(b2){
+                for(var ele of b2){
+                    try{
+                    const title = ele.slice(2,-2).split("/");
+                    const dat=yield api.threads.info({title:title[0]});
+                    if(dat)body=body.replace(ele,"<br>"+title+"<br>"+api.host(req)+"/test/read.cgi/2ch/"+dat.dat+((title[1])?"/"+title[1]:"")+"<br>");
+                    }catch(e){}
+                }
             }
             idlist.push(rows[i].id.substr(0,8));
-            res.write(en(([
+            res.writeX(en(([
                 rows[i].name,
                 rows[i].mail,
                 rows[i].date+" ID:"+rows[i].id,
@@ -43,7 +46,8 @@ function dat(req,res){
                 (i==0)?row.title:""
             ].join("<>")+"\n")));
         }
-        res.end();
+        res.endX();
+        });
         });
     });
 }

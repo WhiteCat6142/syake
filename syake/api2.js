@@ -221,6 +221,10 @@ exports.notice=function(file,node){
     exports.update.emit("notice",file,title,node);
 };
 
+exports.host=function(req) {
+    return "http://"+req.hostname+":300"
+};
+
 function encode(s){
     return new Buffer(s).toString("hex").toUpperCase();
 }
