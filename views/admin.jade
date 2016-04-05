@@ -1,9 +1,18 @@
 extends base
 
 block content
- ul
-  each node in nodes
-   li !{node}
- form(action='/admin.cgi/node' method='post')
-  input(name="node" type="text")
-  button(type="submit") Add
+ .col-md-9
+  ul
+   each node in nodes
+    li
+     |!{node}
+     a(href='/admin.cgi/node/del/'+node) [x]
+  form(action='/admin.cgi/node' method='post')
+   input(name="node" type="text")
+   button(type="submit") Add
+  ul
+   each thread in x
+    li
+     a(href="/admin.cgi/new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
+ .col-md-3
+  a(href="/admin.cgi/refresh") refresh

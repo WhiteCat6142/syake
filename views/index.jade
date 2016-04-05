@@ -1,5 +1,9 @@
 ﻿extends base
 
+block append scripts
+ script(type="text/javascript").
+  window.onload=function(){document.getElementById("cmd").value="post";};
+
 block content
     .container
     .col-md-3
@@ -15,23 +19,24 @@ block content
           .card-block
            a.card-title(href="/thread.cgi/"+thread.title) #{thread.title}
            .card-text #{thread.records}comments
-     ul
-       each thread in x
-         li
-           a(href="/admin.cgi/new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
      a(href="/gateway.cgi/changes") その他
     .col-md-3
      h1 リンク
-     ul
-      li
-       a(href="/admin.cgi/refresh") refresh
-      li
-       a(href="/admin.cgi") admin
-      li
-       a(href="http://www.shingetsu.info/") 公式サイト
-      li
-       a(href="/2ch/subject.txt") 2chブラウザ
-      li
-       a(href="/gateway.cgi/rss") RSS
-      li
-       a(href="/gateway.cgi/motd") 利用規約
+     h2
+      ul
+       li
+        a(href="/admin.cgi") admin
+       li
+        a(href="http://www.shingetsu.info/") 公式サイト
+       li
+        a(href="/2ch/subject.txt") 2chブラウザ
+       li
+        a(href="/gateway.cgi/rss") RSS
+       li
+        a(href="/gateway.cgi/motd") 利用規約
+     h1 新規スレッド
+     form.well(method="post",action="/gateway.cgi/new")
+       input(type="hidden",name="cmd",id="cmd")
+       input.form-control(type="text",name="title",placeholder="title")
+       button.btn.btn-primary(type="submit") Create
+       p 注意：新月では新スレより既存のスレを利用する場合が多いです。スレ立ては本当にスレ立てする必要があるか今あるスレで十分ではないかよく考えてから行いましょう｡

@@ -20,7 +20,6 @@ app.use(logger('dev'));
 app.use(cache.get);
 app.use(cache.put);
 api.update.on("update",cache.clear);
-api.update.on("notice",cache.clear);
 
 app.use(compression({threshold:0}));
 

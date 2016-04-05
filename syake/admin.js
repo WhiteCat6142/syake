@@ -7,23 +7,26 @@ const cache =require('comp-cache');
 exports.set=function(app){
 app.use(function(req, res, next){
   var user = req.headers["authorization"];
-  if(!user){
-      res.setHeader("WWW-Authenticate","Basic realm=\"ADMIN ACTION\"");
-      res.sendStatus(401);
-  }else{
+  if(user){
       user=new Buffer(user.substr("Basic ".length), 'base64').toString();
-      if(api.config.user==user){next();}
-      else{res.sendStatus(400);}
+      if(api.config.user==user){next();return;}
   }
+  res.setHeader("WWW-Authenticate","Basic realm=\"ADMIN ACTION\"");
+  res.sendStatus(401);
 });
     
 app.get('/',function(req,res){
-    res.render('admin',{nodes:nodeManeger.nodes});
+    res.render('admin',{nodes:nodeManeger.nodes.map(function(ele){return ele.replace(/\//g,"+")}),x:api.unkownThreads});
 });
 app.post('/node',function(req,res){
     const node = req.body.node;
-    if(node.startsWith("del ")){}
-     else {nodeManeger.nodes.push(node);}
+    nodeManeger.nodes.push(node);
+    res.redirect("back");
+});
+app.get('/node/del/:node',function(req,res){
+    const node =req.params.node.replace(/\+/g,"/");
+    const i =nodeManeger.nodes.indexOf(node);
+    if(i>0)nodeManeger.nodes.splice(i,1);
     res.redirect("back");
 });
 app.get('/refresh',function(req,res){
@@ -43,10 +46,7 @@ app.get('/new/:node/:file',function(req,res){
         },10);
     });
 });
-app.get('/new/:title',function(req,res){
-    api.threads.create(req.params.title);
-    res.redirect("/thread.cgi/"+req.params.title);
-});
+
 app.get('/post',function(req,res){
     res.end("<html><body><form action='/admin.cgi/post' method='post'><input name=\"x\" type=\"text\" /><button type=\"submit\" >Post</button></form></body></html>");
 });

@@ -5,13 +5,13 @@ const RSS = require('rss');
 
 var tags =["a","b","c"];
 function index(req, res) {
- api.threads.get({limit:15,sort:true,addDate:true}).then(function(threads) {
-  res.renderX('index',{threads:threads,tags:tags,x:api.unkownThreads});
+ api.threads.get({limit:10,sort:true,addDate:true}).then(function(threads) {
+  res.renderX('index',{threads:threads,tags:tags});
  });
 }
 function changes(req, res) {
  api.threads.get({sort:true,tag:req.query.tag,addDate:true}).then(function(threads) {
-  res.renderX('index',{threads:threads,tags:tags,x:api.unkownThreads});
+  res.renderX('index',{threads:threads,tags:tags});
  });
 }
 
@@ -50,12 +50,18 @@ function rss(req,res){
     }
     res.endX(rss.xml());
 }
+function newT(req,res){
+    if(b.cmd!="post")return;
+    api.threads.create(req.body.title);
+    res.redirect("/thread.cgi/"+req.params.title);
+}
 
 exports.set=function(app){
 app.get('/',index);
 app.get('/gateway.cgi',index);
 app.get('/gateway.cgi/changes',changes);
 app.get('/gateway.cgi/rss',rss);
+app.post('/gateway.cgi/new',newT);
 app.get('/thread.cgi/:id',thread);
 app.get('/thread.cgi/:id/:i',thread);
 app.post('/thread.cgi',post);
