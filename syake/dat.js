@@ -15,6 +15,7 @@ function subject(req,res){
 function dat(req,res){
     api.threads.info({dat:req.params.dat.slice(0,-4)}).then(function(row){
         const file = row.file;
+        res.setHeader('Last-Modified',row.stamp);
         api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
         co(function*() {
         var idlist = [];

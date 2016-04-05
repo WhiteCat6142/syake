@@ -222,7 +222,7 @@ exports.notice=function(file,node){
 };
 
 exports.host=function(req) {
-    return "http://"+req.hostname+":300"
+    return "http://"+req.hostname+":3000"
 };
 
 function encode(s){

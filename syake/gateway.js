@@ -41,7 +41,7 @@ function rss(req,res){
     for(var i=0;i<recent.length;i++){
         var x = recent[i];
         rss.item({
-            url:("//thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
+            url:(api.host(req)+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
             title:x.title,
             description:bodys[i].body,
             date:bodys[i].date,
