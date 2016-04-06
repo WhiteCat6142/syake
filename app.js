@@ -9,7 +9,9 @@ const jade = require("jade");
 const api = require("./syake/api2");
 const cache = require("comp-cache");
 
-api.config=require("./autosaver").sync("./file/config.json","json",{readonly:true});
+const au = require("./autosaver");
+var config=au.read("./file/config.json","json");
+api.__defineGetter__("config",function(){return config.data;});
 
 app.use(function(req, res, next){
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
@@ -32,14 +34,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'jade');
 app.set('views', './views');
 
-/*
 setImmediate(function(){
 const options = {cache: true};
 jade.compileFile('./views/base.jade', options);
 jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
 });
-*/
 
 const admin = express.Router();
 app.use("/admin.cgi",admin);

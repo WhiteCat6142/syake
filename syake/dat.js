@@ -34,7 +34,7 @@ function dat(req,res){
                     try{
                     const title = ele.slice(2,-2).split("/");
                     const dat=yield api.threads.info({title:title[0]});
-                    if(dat)body=body.replace(ele,"<br>"+title+"<br>"+api.host(req)+"/test/read.cgi/2ch/"+dat.dat+((title[1])?"/"+title[1]:"")+"<br>");
+                    if(dat)body=body.replace(ele,"<br>"+title+"<br>"+api.host(req)+"/test/read.cgi/2ch/"+dat.dat+"<br>");
                     }catch(e){}
                 }
             }
@@ -50,6 +50,8 @@ function dat(req,res){
         res.endX();
         });
         });
+    }).catch(function(){
+        res.sendStatus(404);
     });
 }
 const msg = en("<HTML><!-- 2ch_X:true --><HEAD><TITLE>書きこみました</TITLE></HEAD><BODY>書きこみました</BODY></HTML>");

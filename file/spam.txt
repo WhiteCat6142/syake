@@ -1,0 +1,2 @@
+(https?://.+){4}
+mail:.+@gmail.com<>name:.+<>body:[^あ-ん]+http.+

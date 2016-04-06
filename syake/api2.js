@@ -7,6 +7,7 @@ const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
 const request = require('request');
 const fs = require('fs');
+const au = require("../autosaver");
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -25,6 +26,8 @@ exports.unkownThreads=[];
 exports.deleted=[];
 
 exports.config=undefined;
+
+var spamt=au.read("file/spam.txt","txt");
 
 exports.threads = {
 	get:function(option){
@@ -56,7 +59,7 @@ exports.threads = {
 		else if(option.title)s+=" where title = \""+option.title+"\"";
 		else if(option.dat)s+=" where dat = \""+option.dat+"\"";
 		return sqlGet("threads",s).then(function(rows){
-			if(rows.length==1)return Promise.resolve(rows[0]);
+			if(rows.length==1&&rows[0].records>0)return Promise.resolve(rows[0]);
 			return Promise.reject();
 		});
 	}
@@ -71,9 +74,12 @@ exports.thread = {
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
-        if(body.match(exports.config.spam)){
+        var ss=spamt.data.split("[\n\r]+");
+        for(var s of ss){
+        if(body.match(s)){
             db.run("INSERT INTO spam(id) VALUES(?)",id);
-            throw "Spam";
+            console.log("spam:"+body);
+        }
         }
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
@@ -190,8 +196,8 @@ exports.convert = function(rows){
 		r[i]={date:time,id:rows[i].id.substr(0,8)};
 		content=rows[i].content.split("<>");		
 		for(var j=0;j<content.length;j++){
-			var x = content[j].match(/([a-z]*):(.*)/);
-			if(x)r[i][x[1].replace("_","")]=x[2];
+			var x = content[j].match(/([a-z_]*):(.*)/);
+			if(x)r[i][x[1]]=x[2];
 		}
         r[i].body=r[i].body||"";
 	}
