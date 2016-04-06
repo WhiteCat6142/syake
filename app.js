@@ -32,11 +32,14 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'jade');
 app.set('views', './views');
 
+/*
+setImmediate(function(){
 const options = {cache: true};
 jade.compileFile('./views/base.jade', options);
 jade.compileFile('./views/index.jade', options);
 jade.compileFile('./views/bbs.jade', options);
-
+});
+*/
 
 const admin = express.Router();
 app.use("/admin.cgi",admin);

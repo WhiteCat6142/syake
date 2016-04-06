@@ -6,10 +6,8 @@
     "nodes":[
         "node.shingetsu.info:8000/server.cgi",
         "ygg.io/server",
-        "133.130.115.168/stable/server_api",
-        "shingetu.fe100.net:8000/server.cgi",
         "rep4649.ddo.jp:8000/server.cgi",
-        ""],
+        "","","",""],
     "range":{
         "node":2,
         "head":4,

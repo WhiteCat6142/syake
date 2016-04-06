@@ -6,12 +6,15 @@ const RSS = require('rss');
 var tags =["a","b","c"];
 function index(req, res) {
  api.threads.get({limit:10,sort:true,addDate:true}).then(function(threads) {
-  res.renderX('index',{threads:threads,tags:tags});
+  res.renderX('index',{threads:threads,tags:tags,title:"新月 syake"});
  });
 }
 function changes(req, res) {
- api.threads.get({sort:true,tag:req.query.tag,addDate:true}).then(function(threads) {
-  res.renderX('index',{threads:threads,tags:tags});
+ api.threads.get({sort:true,tag:req.query.tag}).then(function(threads) {
+     res.type("text/plain; charset=utf-8");
+     res.endX(JSON.stringify(threads.map(function(t) {
+         return {s:t.stamp,t:t.title,r:t.records};
+     })));
  });
 }
 
@@ -59,7 +62,7 @@ function newT(req,res){
 exports.set=function(app){
 app.get('/',index);
 app.get('/gateway.cgi',index);
-app.get('/gateway.cgi/changes',changes);
+app.get('/gateway.cgi/api/changes',changes);
 app.get('/gateway.cgi/rss',rss);
 app.post('/gateway.cgi/new',newT);
 app.get('/thread.cgi/:id',thread);

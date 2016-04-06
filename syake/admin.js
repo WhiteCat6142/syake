@@ -35,6 +35,10 @@ app.get('/refresh',function(req,res){
     cache.clear();
     res.redirect("back");
 });
+app.get('/refreshc',function(req,res){
+    cache.clear();
+    res.redirect("back");
+});
 
 app.get('/new/:node/:file',function(req,res){
     const file = req.params.file;

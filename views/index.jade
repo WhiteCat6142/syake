@@ -3,6 +3,7 @@
 block append scripts
  script(type="text/javascript").
   window.onload=function(){document.getElementById("cmd").value="post";};
+ script(type="text/javascript" src="/js/index.js")
 
 block content
     .container
@@ -13,13 +14,20 @@ block content
          a(href="/gateway.cgi/changes?tag="+tag) #{tag}
     .col-md-6
      h1 スレッド
-     ul
+     ul(id="threads")
        each thread in threads
          .card
           .card-block
            a.card-title(href="/thread.cgi/"+thread.title) #{thread.title}
            .card-text #{thread.records}comments
-     a(href="/gateway.cgi/changes") その他
+     script(type="text/template",id="tmpl")
+      |{{#ts}}
+      .card
+       .card-block
+        a.card-title(href="/thread.cgi/{{t}}") {{t}}
+        .card-text {{r}}comments
+      |{{/ts}}
+     a(id="changes") その他
     .col-md-3
      h1 リンク
      h2
