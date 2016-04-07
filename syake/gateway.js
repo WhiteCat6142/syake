@@ -22,6 +22,7 @@ function thread(req, res){
  const title = req.params.id;
  api.threads.info({title:title}).then(function(row){
    const file = row.file;
+   res.setHeader('Last-Modified',row.stamp);
    const offset = Math.max(row.records-10,0);//limit:10,offset:offset
    api.thread.get(file,{}).then(api.convert)
    .then(function(rows){res.renderX('bbs', { title: title, messages: rows,file: file});

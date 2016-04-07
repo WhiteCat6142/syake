@@ -29,6 +29,30 @@ exports.config=undefined;
 
 var spamt=au.read("file/spam.txt","txt");
 
+db.run("CREATE TABLE threads (\
+tid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\
+stamp INTEGER NOT NULL,\
+records INTEGER NOT NULL DEFAULT 0,\
+title TEXT NOT NULL UNIQUE,\
+dat INTEGER NOT NULL UNIQUE,\
+file TEXT NOT NULL UNIQUE,\
+laststamp INTEGER,\
+lastid CHAR(32)\
+);",function(err) {
+    if(!err){
+        db.run("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);");
+        db.run("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);");
+        db.run("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);");
+        
+        db.run("create unique index tindex on threads(title,file,dat);");
+        db.run("create index sindex on threads(stamp);");
+        db.run("create index tiindex on ttt(id);");
+        db.run("create index taindex on ttt(tag);");
+        db.run("create unique index tagindex on tag(tag);");
+        db.run("create unique index spamindex on spam(id);");
+    }
+});
+
 exports.threads = {
 	get:function(option){
 		var s="";
@@ -50,15 +74,16 @@ exports.threads = {
           if(l[i].file==file){l.splice(i,1);}
       }
       console.log("newThread:"+t+" "+dat+" "+file+" "+title)
- 	  db.run("CREATE TABLE "+file+" (stamp int,id text,content text)");
+ 	  db.run("CREATE TABLE "+file+" (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL)");
  	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?)", t, title, dat, file);
+      db.run("create index "+file+"_sindex on "+file+"(stamp);");
 	},
 	info:function(option){
         var s = "";
 		if(option.file)s+=" where file = \""+option.file+"\"";
 		else if(option.title)s+=" where title = \""+option.title+"\"";
 		else if(option.dat)s+=" where dat = \""+option.dat+"\"";
-		return sqlGet("threads",s).then(function(rows){
+		return sqlGet("threads",s,"stamp,records,title,file,dat").then(function(rows){
 			if(rows.length==1&&rows[0].records>0)return Promise.resolve(rows[0]);
 			return Promise.reject();
 		});
@@ -70,7 +95,7 @@ exports.thread = {
 		if(option.time)s+=times(option.time);
 		if(option.id)s+=((s)?" and":" where")+" id = \""+option.id+"\"";
 		if(option.limit&&option.offset)s+=((s)?" and":" where")+" rowid between "+option.offset+" and "+(option.limit+option.offset-1);
-		return sqlGet(file,s+" order by stamp asc");
+		return sqlGet(file,s+" order by stamp asc",(option.head)?"stamp,id":undefined);
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
@@ -167,6 +192,7 @@ function transaction(p){
                 return;
             }
             //var timeout = new Promise(function(resolve, reject) {setTimeout(reject,3000);});
+            //Promise.race([new Promise(p),timeout]).then(
             new Promise(p).then(
                 function(){db.exec("COMMIT");}
                 ,function(err){db.exec("ROLLBACK");}
@@ -204,11 +230,12 @@ exports.convert = function(rows){
 	return r;
 };
 
+
 exports.attach=function(rows){
     try{
     for(var i=0;i<rows.length;i++){
         var s = rows[i].content;
-        if(s.indexOf("attach:")==-1)continue;
+        if(s.indexOf("attach:")===-1)continue;
         var j = s.match(/attach:([^(<>)]*)/);
         var buf = fs.readFileSync("./cache/"+j[1]);
         rows[i].content=s.replace(/attach:([^(<>)]*)/,buf.toString("base64"));

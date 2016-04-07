@@ -8,7 +8,7 @@ function ping(req, res) {
 	res.end("PONG\n"+req.ip);
 }
 function node(req, res) {
-    res.end("67.174.251.214:3000/server.cgi");
+    res.end("");
 	//res.end(nodes[Math.floor(Math.random()*nodes.length)]);
 }
 function join(req, res) {
@@ -33,23 +33,21 @@ function have(req, res) {
 }
 function get(req, res) {
 	api.thread.get(req.params.file,{time:req.params.time}).then(api.attach).then(function(rows){
-		var str ="";
 		for(var i=0; i<rows.length; i++){
-			if(i>0)str+="\n";
-			str+=rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content;
+			if(i>0)res.write("\n");
+			res.write(rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content);
 		}
-		res.end(str);
-	}).catch(onErr(res));
+		res.end();
+	});
 }
 function head(req, res) {
-	api.thread.get(req.params.file,{time:req.params.time}).then(function(rows){
-		var str ="";
+	api.thread.get(req.params.file,{time:req.params.time,head:true}).then(function(rows){
 		for(var i=0; i<rows.length; i++){
-			if(i>0)str+="\n";
-			str+=rows[i].stamp+"<>"+rows[i].id;
+			if(i>0)res.write("\n");
+			res.write(rows[i].stamp+"<>"+rows[i].id);
 		}
-		res.end(str);
-	}).catch(onErr(res));
+		res.end();
+	});
 }
 function update(req, res) {
 	res.end("OK");
@@ -57,19 +55,12 @@ function update(req, res) {
 }
 function recent(req, res) {
 	api.threads.get({time:req.params.time}).then(function(rows){
-		var str ="";
 		for(var i=0; i<rows.length; i++){
-			if(i>0)str+="\n";
-			str+=rows[i].laststamp+"<>"+rows[i].lastid+"<>"+rows[i].file;
+			if(i>0)res.write("\n");
+			res.write(rows[i].laststamp+"<>"+rows[i].lastid+"<>"+rows[i].file);
 		}
-		res.end(str);
-	}).catch(onErr(res));
-}
-
-function onErr(res){
-	return function(err){
-		res.end("");
-	};
+		res.end();
+	});
 }
 
  function nodeString(req, res, next, node) {
@@ -96,4 +87,5 @@ server.get("/get/:file/:time/:id",get);
 server.get('/head/:file/:time',head);
 server.get('/update/:file/:stamp/:id/:node',update);
 server.get('/recent/:time',recent);
+server.use(function(err, req, res, next){res.end("");});
 };
