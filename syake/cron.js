@@ -35,7 +35,7 @@ function readAll(node,file){
     api.threads.create(api.getTitle(file));
     readLine(nodeUrl(node,"get",file,api.config.range.newThread),function(body){
         const x = body.match(/(\d+)<>(.{32})<>(.*)/);
-        api.thread.post(file,x[1],x[2],x[3]);
+        api.thread.post(file,x[1]|0,x[2],x[3]);
     });
 }
 function readHead(node,file){

@@ -43,12 +43,12 @@ app.get('/refreshc',function(req,res){
 app.get('/new/:node/:file',function(req,res){
     const file = req.params.file;
     nodeManeger.readAll(req.params.node.replace("+","/"),file);
+    setTimeout(function(){
     api.threads.info({file:file}).then(function(row){
         const title = encodeURIComponent(row.title);
-        setTimeout(function(){
             res.redirect("/thread.cgi/"+title);
-        },10);
     });
+    },7500);
 });
 
 app.get('/post',function(req,res){

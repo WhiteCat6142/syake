@@ -40,16 +40,21 @@ laststamp INTEGER,\
 lastid CHAR(32)\
 );",function(err) {
     if(!err){
-        db.run("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);");
-        db.run("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);");
-        db.run("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);");
-        
-        db.run("create unique index tindex on threads(title,file,dat);");
-        db.run("create index sindex on threads(stamp);");
+        db.run("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);",function(err) {
+            if(!err)db.run("create unique index spamindex on spam(id);");
+        });
+        db.run("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);",function(err) {
+            if(!err)db.run("create unique index tagindex on tag(tag);");
+        });
+        db.run("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);",function(err) {
+            if(!err){
         db.run("create index tiindex on ttt(id);");
         db.run("create index taindex on ttt(tag);");
-        db.run("create unique index tagindex on tag(tag);");
-        db.run("create unique index spamindex on spam(id);");
+            }
+        });
+        db.run("create unique index tindex on threads(title,file,dat);");
+        db.run("create index sindex on threads(stamp);");
+        fs.mkdir("./cache");
     }
 });
 
@@ -65,7 +70,7 @@ exports.threads = {
         if(option.addDate)return sqlGet("threads",s).then(exports.addDate);
 		return sqlGet("threads",s);
 	},
-	create:function(title){
+	create:function(title,callback){
       const t = now();
 	  const dat = t;
 	  const file = threadFile(title);
@@ -73,10 +78,15 @@ exports.threads = {
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
-      console.log("newThread:"+t+" "+dat+" "+file+" "+title)
- 	  db.run("CREATE TABLE "+file+" (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL)");
- 	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?)", t, title, dat, file);
+      db.serialize(function() {
+          try{
+ 	  db.run("CREATE TABLE "+file+" (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
+ 	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?);", t, title, dat, file);
       db.run("create index "+file+"_sindex on "+file+"(stamp);");
+      console.log("newThread:"+t+" "+dat+" "+file+" "+title);
+      fs.mkdir("./cache/"+file,callback);
+          }catch(e){}
+      });
 	},
 	info:function(option){
         var s = "";
@@ -84,7 +94,7 @@ exports.threads = {
 		else if(option.title)s+=" where title = \""+option.title+"\"";
 		else if(option.dat)s+=" where dat = \""+option.dat+"\"";
 		return sqlGet("threads",s,"stamp,records,title,file,dat").then(function(rows){
-			if(rows.length==1&&rows[0].records>0)return Promise.resolve(rows[0]);
+			if(rows.length==1)return Promise.resolve(rows[0]);
 			return Promise.reject();
 		});
 	}
@@ -107,7 +117,7 @@ exports.thread = {
         }
         }
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
-		if(id){if(md5!=id)throw new Error("Abnormal MD5");}
+		if(id){if(md5!=id){console.log(id);throw new Error("Abnormal MD5");}}
 		else{id=md5;}
         add(file,stamp,id,body);
 	}
@@ -149,7 +159,7 @@ function add(file,stamp,id,content){
                             const name = md5+"."+suffix;
                             content = content.replace(/attach:[^(<>)]*/g,("attach:"+name));
                             console.log(name);
-                            fs.writeFile("./cache/"+name,data,function(err){if(err)console.log(err);});
+                            fs.writeFile("./cache/"+file+"/"+name,data,function(err){if(err)console.log(err);});
                          }
                          exports.update.emit('update',file,stamp,id,content);
                          db.serialize(function() {
@@ -178,7 +188,7 @@ exports.update.on("update",function(file,stamp,id,content){
 function cleanRecent(){
     const list = exports.recent;
     const t = now()-24*60*60*7;
-    while(list[0].stamp<t){
+    while(list.length>0&&list[0].stamp<t){
         list.shift();
     }
 }
@@ -231,17 +241,19 @@ exports.convert = function(rows){
 };
 
 
-exports.attach=function(rows){
+exports.attach=function(file){
+    return function(rows) {
     try{
     for(var i=0;i<rows.length;i++){
         var s = rows[i].content;
         if(s.indexOf("attach:")===-1)continue;
         var j = s.match(/attach:([^(<>)]*)/);
-        var buf = fs.readFileSync("./cache/"+j[1]);
-        rows[i].content=s.replace(/attach:([^(<>)]*)/,buf.toString("base64"));
+        var buf = fs.readFileSync("./cache/"+file+"/"+j[1]);
+        rows[i].content=s.replace(/attach:([^(<>)]*)/,"attach:"+buf.toString("base64"));
     }
     }catch(e){console.log(e);}
     return rows;
+    };
 };
 
 exports.notice=function(file,node){

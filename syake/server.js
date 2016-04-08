@@ -32,7 +32,8 @@ function have(req, res) {
 	);
 }
 function get(req, res) {
-	api.thread.get(req.params.file,{time:req.params.time}).then(api.attach).then(function(rows){
+	const file=req.params.file;
+	api.thread.get(file,{time:req.params.time}).then(api.attach(file)).then(function(rows){
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content);

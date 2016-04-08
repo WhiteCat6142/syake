@@ -19,7 +19,7 @@ block content
       .panel-body
        |!{msg.body}
        if msg.attach
-        img(src='/file/'+msg.attach)
+        img(src='/file/'+file+'/'+msg.attach)
     form.well.col-md-8.col-md-offset-2(method="post",action="/thread.cgi")
      input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")
