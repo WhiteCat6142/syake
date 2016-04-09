@@ -8,6 +8,7 @@ const EventEmitter = require('events').EventEmitter;
 const request = require('request');
 const fs = require('fs');
 const au = require("../autosaver");
+const co = require('co');
 
 function sqlGet(file,option,o){
 	return new Promise(function(resolve, reject){
@@ -25,7 +26,8 @@ exports.update=new EventEmitter();
 exports.unkownThreads=[];
 exports.deleted=[];
 
-exports.config=undefined;
+var config=au.read("./file/config.json","json");
+exports.__defineGetter__("config",function(){return config.data;});
 
 var spamt=au.read("file/spam.txt","txt");
 
@@ -243,16 +245,19 @@ exports.convert = function(rows){
 
 exports.attach=function(file){
     return function(rows) {
-    try{
+        return new Promise(function(resolve, reject) {
+            co(function*(){try{
     for(var i=0;i<rows.length;i++){
         var s = rows[i].content;
         if(s.indexOf("attach:")===-1)continue;
         var j = s.match(/attach:([^(<>)]*)/);
-        var buf = fs.readFileSync("./cache/"+file+"/"+j[1]);
+        var buf = yield co.wrap(fs.readFile)("./cache/"+file+"/"+j[1]);
         rows[i].content=s.replace(/attach:([^(<>)]*)/,"attach:"+buf.toString("base64"));
     }
-    }catch(e){console.log(e);}
-    return rows;
+    resolve(rows);
+            }catch(e){reject(e);}
+            });
+        });
     };
 };
 

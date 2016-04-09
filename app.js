@@ -9,10 +9,6 @@ const jade = require("jade");
 const api = require("./syake/api2");
 const cache = require("comp-cache");
 
-const au = require("./autosaver");
-var config=au.read("./file/config.json","json");
-api.__defineGetter__("config",function(){return config.data;});
-
 app.use(function(req, res, next){
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
@@ -23,10 +19,9 @@ app.use(cache.get);
 app.use(cache.put);
 api.update.on("update",cache.clear);
 
-app.use(compression({threshold:0}));
-
-app.use("/",express.static('www',{maxAge:86400000*7}));
 app.use("/file",express.static('cache',{maxAge:86400000*7}));
+app.use(compression({threshold:0}));
+app.use("/",express.static('www',{maxAge:86400000}));
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
@@ -34,12 +29,10 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'jade');
 app.set('views', './views');
 
-setImmediate(function(){
+setTimeout(function(){
 const options = {cache: true};
 jade.compileFile('./views/base.jade', options);
-jade.compileFile('./views/index.jade', options);
-jade.compileFile('./views/bbs.jade', options);
-});
+},250);
 
 const admin = express.Router();
 app.use("/admin.cgi",admin);
