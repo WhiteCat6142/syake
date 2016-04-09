@@ -40,15 +40,15 @@ app.get('/refreshc',function(req,res){
     res.redirect("back");
 });
 
-app.get('/new/:node/:file',function(req,res){
+app.get('/new/:node/:file', function (req, res) {
     const file = req.params.file;
-    nodeManeger.readAll(req.params.node.replace("+","/"),file);
-    setTimeout(function(){
-    api.threads.info({file:file}).then(function(row){
-        const title = encodeURIComponent(row.title);
-            res.redirect("/thread.cgi/"+title);
-    });
-    },7500);
+    nodeManeger.readAll(req.params.node.replace("+", "/"), file);
+    setTimeout(function () {
+        api.threads.info({ file: file }).then(function (row) {
+            const title = encodeURIComponent(row.title);
+            res.redirect("/thread.cgi/" + title);
+        });
+    }, 7500);
 });
 
 app.get('/post',function(req,res){

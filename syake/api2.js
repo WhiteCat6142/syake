@@ -40,25 +40,25 @@ dat INTEGER NOT NULL UNIQUE,\
 file TEXT NOT NULL UNIQUE,\
 laststamp INTEGER,\
 lastid CHAR(32)\
-);",function(err) {
-    if(!err){
-        db.run("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);",function(err) {
-            if(!err)db.run("create unique index spamindex on spam(id);");
-        });
-        db.run("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);",function(err) {
-            if(!err)db.run("create unique index tagindex on tag(tag);");
-        });
-        db.run("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);",function(err) {
-            if(!err){
-        db.run("create index tiindex on ttt(id);");
-        db.run("create index taindex on ttt(tag);");
-            }
-        });
-        db.run("create unique index tindex on threads(title,file,dat);");
-        db.run("create index sindex on threads(stamp);");
-        fs.mkdir("./cache");
-    }
-});
+);", function (err) {
+        if (!err) {
+            db.run("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);", function (err) {
+                if (!err) db.run("create unique index spamindex on spam(id);");
+            });
+            db.run("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);", function (err) {
+                if (!err) db.run("create unique index tagindex on tag(tag);");
+            });
+            db.run("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);", function (err) {
+                if (!err) {
+                    db.run("create index tiindex on ttt(id);");
+                    db.run("create index taindex on ttt(tag);");
+                }
+            });
+            db.run("create unique index tindex on threads(title,file,dat);");
+            db.run("create index sindex on threads(stamp);");
+            fs.mkdir("./cache");
+        }
+    });
 
 exports.threads = {
 	get:function(option){
@@ -80,14 +80,14 @@ exports.threads = {
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
-      db.serialize(function() {
-          try{
- 	  db.run("CREATE TABLE "+file+" (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
- 	  db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?);", t, title, dat, file);
-      db.run("create index "+file+"_sindex on "+file+"(stamp);");
-      console.log("newThread:"+t+" "+dat+" "+file+" "+title);
-      fs.mkdir("./cache/"+file,callback);
-          }catch(e){}
+      db.serialize(function () {
+          try {
+              db.run("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
+              db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?);", t, title, dat, file);
+              db.run("create index " + file + "_sindex on " + file + "(stamp);");
+              console.log("newThread:" + t + " " + dat + " " + file + " " + title);
+              fs.mkdir("./cache/" + file, callback);
+          } catch (e) { }
       });
 	},
 	info:function(option){
@@ -112,11 +112,11 @@ exports.thread = {
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
         var ss=spamt.data.split("[\n\r]+");
-        for(var s of ss){
-        if(body.match(s)){
-            db.run("INSERT INTO spam(id) VALUES(?)",id);
-            console.log("spam:"+body);
-        }
+        for (var s of ss) {
+            if (body.match(s)) {
+                db.run("INSERT INTO spam(id) VALUES(?)", id);
+                console.log("spam:" + body);
+            }
         }
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id){console.log(id);throw new Error("Abnormal MD5");}}
@@ -132,12 +132,12 @@ exports.spam=function(id){
     });
 };
 
-exports.post=function(file,name,mail,body,time,subject){
-//if(subject)exports.threads.create(subject);
-const porto=exports.config.porto;
-    if(porto){
-        const req ={cmd:"post",file:file,name:name,mail:mail,body:body,dopost:"dopost",error:""};
-        request.post(porto,{form:req});
+exports.post = function (file, name, mail, body, time, subject) {
+    //if(subject)exports.threads.create(subject);
+    const porto = exports.config.porto;
+    if (porto) {
+        const req = { cmd: "post", file: file, name: name, mail: mail, body: body, dopost: "dopost", error: "" };
+        request.post(porto, { form: req });
         return;
     }
  var s = "";
@@ -164,10 +164,10 @@ function add(file,stamp,id,content){
                             fs.writeFile("./cache/"+file+"/"+name,data,function(err){if(err)console.log(err);});
                          }
                          exports.update.emit('update',file,stamp,id,content);
-                         db.serialize(function() {
-                          db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
-		                  db.run("INSERT INTO "+file+" VALUES(?,?,?)", stamp, id, content);
-                          resolve();
+                         db.serialize(function () {
+                             db.run("UPDATE threads set stamp=?, records=records+1, laststamp=?, lastid=? where file = ?", now(), stamp, id, file);
+                             db.run("INSERT INTO " + file + " VALUES(?,?,?)", stamp, id, content);
+                             resolve();
                          });
                     }else{
                         resolve();
@@ -234,7 +234,7 @@ exports.convert = function(rows){
 		r[i]={date:time,id:rows[i].id.substr(0,8)};
 		content=rows[i].content.split("<>");		
 		for(var j=0;j<content.length;j++){
-			var x = content[j].match(/([a-z_]*):(.*)/);
+			var x = content[j].match(/^([a-z_]*):(.*)/);
 			if(x)r[i][x[1]]=x[2];
 		}
         r[i].body=r[i].body||"";
@@ -243,19 +243,20 @@ exports.convert = function(rows){
 };
 
 
-exports.attach=function(file){
-    return function(rows) {
-        return new Promise(function(resolve, reject) {
-            co(function*(){try{
-    for(var i=0;i<rows.length;i++){
-        var s = rows[i].content;
-        if(s.indexOf("attach:")===-1)continue;
-        var j = s.match(/attach:([^(<>)]*)/);
-        var buf = yield co.wrap(fs.readFile)("./cache/"+file+"/"+j[1]);
-        rows[i].content=s.replace(/attach:([^(<>)]*)/,"attach:"+buf.toString("base64"));
-    }
-    resolve(rows);
-            }catch(e){reject(e);}
+exports.attach = function (file) {
+    return function (rows) {
+        return new Promise(function (resolve, reject) {
+            co(function* () {
+                try {
+                    for (var i = 0; i < rows.length; i++) {
+                        var s = rows[i].content;
+                        if (s.indexOf("attach:") === -1) continue;
+                        var j = s.match(/attach:([^(<>)]*)/);
+                        var buf = yield co.wrap(fs.readFile)("./cache/" + file + "/" + j[1]);
+                        rows[i].content = s.replace(/attach:([^(<>)]*)/, "attach:" + buf.toString("base64"));
+                    }
+                    resolve(rows);
+                } catch (e) { reject(e); }
             });
         });
     };
