@@ -56,7 +56,7 @@ lastid CHAR(32)\
             });
             db.run("create unique index tindex on threads(title,file,dat);");
             db.run("create index sindex on threads(stamp);");
-            fs.mkdir("./cache");
+            if(exports.config.image)fs.mkdir("./cache");
         }
     });
 
@@ -86,7 +86,7 @@ exports.threads = {
               db.run("INSERT INTO threads(stamp,title,dat,file) VALUES(?,?,?,?);", t, title, dat, file);
               db.run("create index " + file + "_sindex on " + file + "(stamp);");
               console.log("newThread:" + t + " " + dat + " " + file + " " + title);
-              fs.mkdir("./cache/" + file, callback);
+              if(exports.config.image)fs.mkdir("./cache/" + file, callback);else callback();
           } catch (e) { }
       });
 	},
@@ -112,6 +112,7 @@ exports.thread = {
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
         var ss=spamt.data.split("[\n\r]+");
+        if(!exports.config.image){ss.push("attach:");}
         for (var s of ss) {
             if (body.match(s)) {
                 db.run("INSERT INTO spam(id) VALUES(?)", id);
@@ -245,6 +246,7 @@ exports.convert = function(rows){
 
 exports.attach = function (file) {
     return function (rows) {
+        if(!exports.config.image)return rows;
         return new Promise(function (resolve, reject) {
             co(function* () {
                 try {
