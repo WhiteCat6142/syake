@@ -22,10 +22,9 @@ function thread(req, res) {
     const title = req.params.id;
     api.threads.info({ title: title }).then(function (row) {
         const file = row.file;
-        res.setHeader('Last-Modified', row.stamp);
+        res.setHeader('Last-Modified', new Date(row.stamp).toUTCString());
         const offset = Math.max(row.records - 10, 0);//limit:10,offset:offset
-        api.thread.get(file, {}).then(api.convert)
-            .then(function (rows) {
+        api.thread.convert(file, {}).then(function (rows) {
                 res.renderX('bbs', { title: title, messages: rows, file: file });
             });
     }).catch(function () { res.sendStatus(404); });
@@ -42,15 +41,15 @@ function rss(req,res){
     res.setHeader("Content-Type","text/xml; charset=UTF-8");
     const rss = new RSS(api.config.feed);
     const recent = JSON.parse(JSON.stringify(api.recent)).reverse();
-    const bodys=api.convert(recent);
     for(var i=0;i<recent.length;i++){
+        var body=api.conv(recent[i].file)(recent[i]);
         var x = recent[i];
         rss.item({
-            url:(api.host(req)+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
+            url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
             title:x.title,
-            description:bodys[i].body,
-            date:bodys[i].date,
-            author:bodys[i].name||bodys[i].mail
+            description:body.body,
+            date:body.date,
+            author:body.name||body.mail
         });
     }
     res.endX(rss.xml());

@@ -123,7 +123,12 @@ exports.thread = {
 		if(id){if(md5!=id){console.log(id);throw new Error("Abnormal MD5");}}
 		else{id=md5;}
         add(file,stamp,id,body);
-	}
+	},
+    convert:function(file,option) {
+        return exports.thread.get(file,option).then(function(rows) {
+            return rows.map(conv(file));
+        });
+    }
 };
 
 exports.spam=function(id){
@@ -225,23 +230,22 @@ exports.addDate = function(rows){
 	}
 	return rows;
 };
-exports.convert = function(rows){
-	var r = new Array(rows.length);
-	var time = "";
-	var content=null;
-	for(var i=0;i<rows.length;i++){
-		time = new Date(rows[i].stamp*1000).toString();
+function conv(file){
+    return function(row) {
+    	var time = new Date(row.stamp*1000).toString();
 		time = time.substring(0,time.lastIndexOf(" GMT"));
-		r[i]={date:time,id:rows[i].id.substr(0,8)};
-		content=rows[i].content.split("<>");		
-		for(var j=0;j<content.length;j++){
-			var x = content[j].match(/^([a-z_]*):(.*)/);
-			if(x)r[i][x[1]]=x[2];
+		const r={date:time,id:row.id.substr(0,8)};
+		const content=row.content.split("<>");		
+		for(var j of content){
+			var x = j.match(/^([a-z_]*):(.*)/);
+			if(x)r[x[1]]=x[2];
 		}
-        r[i].body=r[i].body||"";
-	}
-	return r;
-};
+        r.body=r.body||"";
+        if(r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
+        return r;
+    };
+}
+exports.conv=conv;
 
 
 exports.attach = function (file) {
@@ -272,10 +276,6 @@ exports.notice=function(file,node){
     const title = exports.getTitle(file);
     unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:title});
     exports.update.emit("notice",file,title,node);
-};
-
-exports.host=function(req) {
-    return "http://"+req.hostname+":3000"
 };
 
 function encode(s){

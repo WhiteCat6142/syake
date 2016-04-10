@@ -15,8 +15,9 @@ function subject(req,res){
 function dat(req,res){
     api.threads.info({dat:req.params.dat.slice(0,-4)}).then(function(row){
         const file = row.file;
-        res.setHeader('Last-Modified',row.stamp);
-        api.thread.get(file,{sort:true}).then(api.convert).then(function(rows){
+        res.setHeader('Last-Modified',new Date(row.stamp).toUTCString());
+        api.thread.convert(file,{sort:true}).then(function(rows){
+        if(rows.length===0){res.sendStatus(404);return;}
         co(function*() {
         var idlist = [];
         for(var i=0;i<rows.length;i++){
@@ -34,7 +35,7 @@ function dat(req,res){
                     try{
                     const title = ele.slice(2,-2).split("/");
                     const dat=yield api.threads.info({title:title[0]});
-                    if(dat)body=body.replace(ele,"<br>"+title+"<br>"+api.host(req)+"/test/read.cgi/2ch/"+dat.dat+"<br>");
+                    if(dat)body=body.replace(ele,"<br>"+title+"<br>"+api.host+"/test/read.cgi/2ch/"+dat.dat+"<br>");
                     }catch(e){}
                 }
             }

@@ -10,6 +10,7 @@ const api = require("./syake/api2");
 const cache = require("comp-cache");
 
 app.use(function(req, res, next){
+  if(!api.host)api.host="http://"+req.hostname+":3000";
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
