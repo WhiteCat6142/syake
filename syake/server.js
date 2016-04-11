@@ -33,7 +33,7 @@ function have(req, res) {
 }
 function get(req, res) {
 	const file=req.params.file;
-	api.thread.get(file,{time:req.params.time}).then(api.attach(file)).then(function(rows){
+	api.thread.get(file,{time:req.params.time,id:req.params.id}).then(api.attach(file)).then(function(rows){
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content);
@@ -42,7 +42,7 @@ function get(req, res) {
 	});
 }
 function head(req, res) {
-	api.thread.get(req.params.file,{time:req.params.time,head:true}).then(function(rows){
+	api.thread.get(req.params.file,{time:req.params.time,id:req.params.id,head:true}).then(function(rows){
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].stamp+"<>"+rows[i].id);
@@ -86,6 +86,7 @@ server.get('/have/:file',have);
 server.get("/get/:file/:time",get);
 server.get("/get/:file/:time/:id",get);
 server.get('/head/:file/:time',head);
+server.get("/head/:file/:time/:id",get);
 server.get('/update/:file/:stamp/:id/:node',update);
 server.get('/recent/:time',recent);
 server.use(function(err, req, res, next){res.end("");});

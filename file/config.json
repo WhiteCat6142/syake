@@ -24,5 +24,12 @@
         "author": "WhiteCat6142",
         "language": "ja"
     },
-    "image":true
+    "image": true,
+    "db": {
+        "client": "sqlite3",
+        "connection": {
+            "filename": "./record.sqlite3"
+        },
+        "useNullAsDefault": true
+    }
 }
