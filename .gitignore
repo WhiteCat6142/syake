@@ -2,3 +2,4 @@ node_modules/
 .vscode/
 cache/
 record.sqlite3
+record.sqlite3-journal

@@ -85,7 +85,7 @@ exports.threads = {
       });
 	},
 	info:function(option){
-        var s = knex.select("stamp,records,title,file,dat").from("threads");
+        var s = knex.select("stamp","records","title","file","dat").from("threads");
 		if(option.file)s=s.where("file",option.file);
 		else if(option.title)s=s.where("title",option.title);
 		else if(option.dat)s=s.where("dat",option.dat);
@@ -97,11 +97,11 @@ exports.threads = {
 };
 exports.thread = {
 	get:function(file,option){
-		var s = knex.select((option.head)?"stamp,id":undefined).from(file);
+		var s = knex.select((option.head)?["stamp","id"]:undefined).from(file);
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.id)s=s.andWhere("id",option.id);
-		if(option.limit&&option.offset)s=s.andWhereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
-		return s.orderBy("stamp","desc");
+		if(option.limit&&option.offset&&(option.offset>=0))s=s.andWhereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
+		return s.orderBy("stamp","asc");
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
@@ -152,7 +152,7 @@ exports.post = function (file, name, mail, body, time, subject) {
 
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        trx.select("stamp,id").from(file).where("stamp",stamp).andWhere("id",id)
+        return trx.select("stamp","id").from(file).where("stamp",stamp).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) return;
             exports.update.emit('update', file, stamp, id, content);
@@ -167,7 +167,7 @@ function add(file,stamp,id,content){
                 fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
             }
             return Promise.all([
-                trx("threads").update({stamp:now(),laststamp:stamp,last:id}),
+                trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:knex.raw("records + 1")}),
                 trx(file).insert({stamp:stamp,id:id,content:content})
             ]);
         });
