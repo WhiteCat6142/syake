@@ -3,6 +3,7 @@ extends base
 block append scripts
  script(type="text/javascript").
   window.onload=function(){document.getElementById("cmd").value="post";};
+ script(type="text/javascript" src="/js/bbs.js")
 
 block content
     each msg in messages
@@ -18,8 +19,6 @@ block content
       .clearfix
       .panel-body
        |!{msg.body}
-       if msg.attach
-        img(src='/file/'+file+'/'+msg.attach)
     form.well.col-md-8.col-md-offset-2(method="post",action="/thread.cgi")
      input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")

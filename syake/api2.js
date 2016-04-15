@@ -3,10 +3,11 @@
 const crypto = require('crypto');
 const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
-const request = require('request');
+//const request = require('request-lite');
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
+const tohtml = require('./tohtml').t;
 
 
 exports.recent=[];
@@ -100,7 +101,7 @@ exports.thread = {
 		var s = knex.select((option.head)?["stamp","id"]:undefined).from(file);
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.id)s=s.andWhere("id",option.id);
-		if(option.limit&&option.offset&&(option.offset>=0))s=s.andWhereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
+		if(option.limit&&option.offset&&(option.offset>=0))s=s.whereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
 		return s.orderBy("stamp","asc");
 	},
 	post:function(file,stamp,id,body){
@@ -121,6 +122,10 @@ exports.thread = {
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
+            if(option.html){return rows.map(conv(file)).map(function(ele){
+                ele.body=tohtml(ele.body);
+                return ele;
+            });}
             return rows.map(conv(file));
         });
     }
@@ -135,15 +140,9 @@ exports.spam=function(id){
 
 exports.post = function (file, name, mail, body, time, subject) {
     //if(subject)exports.threads.create(subject);
-    const porto = exports.config.porto;
-    if (porto) {
-        const req = { cmd: "post", file: file, name: name, mail: mail, body: body, dopost: "dopost", error: "" };
-        request.post(porto, { form: req });
-        return;
-    }
  var s = "";
- if(mail)s+="mail:"+mail+"<>";
- if(name)s+="name:"+name+"<>";
+ if(mail)s+="mail:"+escape(mail)+"<>";
+ if(name)s+="name:"+escape(name)+"<>";
  s+="body:"+escape(body).replace(/\r\n|\r|\n/g,"<br>");
  exports.threads.info(file).then(function(row){
    exports.thread.post(row.file,time||now(),null,s);
@@ -155,7 +154,6 @@ function add(file,stamp,id,content){
         return trx.select("stamp","id").from(file).where("stamp",stamp).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) return;
-            exports.update.emit('update', file, stamp, id, content);
             if (content.indexOf("attach:") != -1) {
                 const suffix = content.match(/suffix:([^(<>)]*)/)[1];
                 const attach = content.match(/attach:([^(<>)]*)/)[1];
@@ -166,6 +164,7 @@ function add(file,stamp,id,content){
                 console.log(name);
                 fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
             }
+            exports.update.emit('update', file, stamp, id, content);
             return Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:knex.raw("records + 1")}),
                 trx(file).insert({stamp:stamp,id:id,content:content})
