@@ -34,7 +34,6 @@ setTimeout(function(){
 const options = {cache: true};
 jade.compileFile('./views/base.jade', options);
 },250);
-http.globalAgent.maxSockets=128;
 
 const admin = express.Router();
 app.use("/admin.cgi",admin);

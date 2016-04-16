@@ -3,6 +3,7 @@
 const api = require('./api2');
 const http = require('http');
 const zlib = require('zlib');
+const Url = require('url');
 
 const nodes = api.config.nodes;
 exports.nodes=nodes;
@@ -22,7 +23,7 @@ api.update.on("update",function(file,stamp,id){
 function update(file,stamp,id,node){
 	console.log("update:"+file+stamp+id+node);
     api.spam(id).then(function(){
-	api.thread.get(file,{time:stamp,id:id}).then(function(rows){
+	api.thread.get(file,{time:stamp,id:id,head:true}).then(function(rows){
 		if(rows.length!=0)return;
 		readLine(nodeUrl(node,"get",file)+"/"+stamp+"/"+id,function(body){
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
@@ -40,7 +41,7 @@ function readAll(node,file){
 }
 function readHead(node,file){
     const t = api.config.range.head;
-	api.thread.get(file,{time:time(t)}).then(function(rows){
+	api.thread.get(file,{time:time(t),head:true}).then(function(rows){
 		var list=new Array(rows.length);
 		for(var i=0;i<rows.length;i++){
 			list[i]=rows[i].stamp+"<>"+rows[i].id;
@@ -56,7 +57,7 @@ function readHead(node,file){
                 list[i]=undefined;
                 num++;
             }
-		},function(){
+		},function(){/*
             const per=next.length;
             if(per==0)return;
             const c=(per>30)||(len!=0)&&((num*3<len)||(per>len*30));
@@ -66,7 +67,7 @@ function readHead(node,file){
                 return;
             }
             // when new>0 and old>0 , it must be new:old<=1:3 match:old>=1:2
-            //limit new<=30
+            //limit new<=30*/
             for(var i=0;i<next.length;i++){
                 var x = next[i].split("<>");
                 update(file,x[0],x[1],node);
@@ -104,10 +105,12 @@ if(api.config.range.first){
     for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
 }
 
-
+const ag= new http.Agent({maxSockets:64});
 function get(url){
 	return new Promise(function(resolve, reject){
-		const request=http.request(url, function(res){
+		const o=Url.parse(url);
+		o.agent=ag;
+		const request=http.request(o, function(res){
             if(res.statusCode!=200)reject(res.statusCode);
 				var bufs = []; 
 				res.on('data', function(chunk){bufs.push(chunk);});

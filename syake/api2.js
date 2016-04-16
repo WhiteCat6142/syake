@@ -35,19 +35,19 @@ file TEXT NOT NULL UNIQUE,\
 laststamp INTEGER,\
 lastid CHAR(32)\
 );").then(function () {
-                knex.raw("create unique index tindex on threads(title,file,dat);");
-                knex.table("threads").index("stamp");
+                knex.raw("CREATE unique index tindex on threads(title,file,dat);").then();
+                knex.raw("CREATE index sindex on threads(stamp);").then();
             });
 
         knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
-            knex.raw("create unique index spamindex on spam(id);");
+            knex.raw("CREATE unique index spamindex on spam(id);").then();
         });
         knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
-            knex.raw("create unique index tagindex on tag(tag);");
+            knex.raw("CREATE unique index tagindex on tag(tag);").then();
         });
         knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
-            knex.table("ttt").index("id");
-            knex.table("ttt").index("tag");
+            knex.raw("CREATE index tiindex on ttt(id);").then();
+            knex.raw("CREATE index taindex on ttt(tag);").then();
         });
         if (exports.config.image) fs.mkdir("./cache");
     }
@@ -69,21 +69,19 @@ exports.threads = {
 	create:function(title,callback){
       const t = now();
 	  const file = threadFile(title);
-      console.log("newThread:" + t + " " + dat + " " + file + " " + title);
+      console.log("newThread:" + t + " " + t + " " + file + " " + title);
       const l=exports.unkownThreads;
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
-      db.serialize(function () {
           try {
               co(function*(){
                   yield knex.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield knex("threads").insert({stamp:t,title:title,dat:t,file:file});
-                  yield knex.table(file).index("stamp");
+                  yield knex.raw("CREATE index "+file+"_sindex on "+file+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);else callback();
               });
           } catch (e) { }
-      });
 	},
 	info:function(option){
         var s = knex.select("stamp","records","title","file","dat").from("threads");
@@ -149,11 +147,15 @@ exports.post = function (file, name, mail, body, time, subject) {
  });  
 };
 
+const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        return trx.select("stamp","id").from(file).where("stamp",stamp).andWhere("id",id)
+        return trx.select("stamp","id").from(file).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
         .then(function(rows){
-            if (rows.length > 0) return;
+            if (rows.length > 0) {
+                if(stamp!==rows[0].stamp)knex("spam").insert({id:id});
+                return;
+            }
             if (content.indexOf("attach:") != -1) {
                 const suffix = content.match(/suffix:([^(<>)]*)/)[1];
                 const attach = content.match(/attach:([^(<>)]*)/)[1];
