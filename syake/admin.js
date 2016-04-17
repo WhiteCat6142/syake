@@ -16,7 +16,11 @@ app.use(function(req, res, next){
 });
     
 app.get('/',function(req,res){
-    res.render('admin',{nodes:nodeManeger.nodes.map(function(ele){return ele.replace(/\//g,"+")}),x:api.unkownThreads});
+    res.render('admin',{
+        nodes:nodeManeger.nodes.map(function(ele){return ele.replace(/\//g,"+")}),
+        x:api.unkownThreads,
+        friends:api.config.friends
+    });
 });
 app.post('/node',function(req,res){
     const node = req.body.node;

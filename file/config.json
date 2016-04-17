@@ -5,6 +5,9 @@
         "node.shingetsu.info:8000/server.cgi",
         "ygg.io/server",
         "rep4649.ddo.jp:8000/server.cgi"],
+    "join":[],
+    "friends":[],
+    "update":false,
     "range":{
         "node":2,
         "head":4,

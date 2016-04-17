@@ -8,17 +8,14 @@ const Url = require('url');
 const nodes = api.config.nodes;
 exports.nodes=nodes;
 
-/*
+if(api.config.update){
 api.update.on("update",function(file,stamp,id){
-    for(var i=0;i<nodes.length;i++){
-        get((nodeUrl(nodes[i],"update")+"/"+file+"/"+stamp+"/"+id+"/:3000+server.cgi"))
-        .catch(function(err){
-		console.log("bye "+nodes[i]);
-        delete nodes[i];
-        });
+	const s="/"+file+"/"+stamp+"/"+id+"/:"+(process.env.PORT ||3000)+"server.cgi";
+    for(var n of api.config.friends){
+        get(nodeUrl(n,"update")+s);
      }
 });
-*/
+}
 
 function update(file,stamp,id,node){
 	console.log("update:"+file+stamp+id+node);
@@ -100,6 +97,10 @@ setInterval(function(){
         readNode(nodes[this.numt++]);
 },api.config.range.interval*1000);
 
+setInterval(function(){
+	for(var n of api.config.join)readLine(nodeUrl(n,"join"));
+},30*60);
+
 if(api.config.range.first){
     const t = api.config.range.first;
     for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
@@ -126,7 +127,7 @@ function get(url){
 		});
 		request.on('error', function(e){reject(e);});
 		request.setHeader("accept-encoding","gzip");
-		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.12.0)');
+		request.setHeader('user-agent','shinGETsu/0.35 (Syake/0.12.0)');
 		request.end();
 	});
 }
@@ -136,8 +137,10 @@ function readLine(url,callback,done){
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
         if(done)done();
 	}).catch(function(e){
-        console.log("error");
-        if(e.code!="ECONNREFUSED"&&e.code!="ETIMEDOUT"&&e.code!="ENOTFOUND")console.log(e);
+        if(e.code=="ECONNREFUSED"&&e.code=="ETIMEDOUT")return;
+		console.log(e);
+		console.log("bye "+nodes[i]);
+        delete nodes[i];
     });
 }
 
@@ -159,7 +162,7 @@ exports.read=readNode;
 exports.readAll=readAll;
 
 function nodeUrl(node,m,file,t){
-	if(m=="head"||m=="recent")console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
+	if((m!="get")&&(m!="head"))console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
     const s = ((file)?"/"+file:"")+((t)?"/"+time(t):"");
 	return "http://"+node+"/"+m+s;
 }
