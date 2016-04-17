@@ -82,14 +82,15 @@ exports.threads = {
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
-          try {
+          
               co(function*(){
+                  try {
                   yield knex.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield knex("threads").insert({stamp:t,title:title,dat:t,file:file});
                   yield knex.raw("CREATE index "+file+"_sindex on "+file+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);else callback();
+                  } catch (e) {console.log(e);}
               });
-          } catch (e) { }
 	},
 	info:function(option){
         var s = knex.select("stamp","records","title","file","dat").from("threads");
