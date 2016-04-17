@@ -87,7 +87,7 @@ exports.threads = {
                   try {
                   yield trx.raw("CREATE TABLE " + ff(file) + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield trx("threads").insert({stamp:t,title:title,dat:t,file:file});
-                  yield trx.raw("CREATE index "+ff(file)+"_sindex on "+ff(file)+"(stamp);");
+                  yield trx.raw("CREATE index "+ff(file,55)+"_sindex on "+ff(file)+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
                   } catch (e) {console.log(e);}
@@ -278,6 +278,6 @@ function times(time){
 	return s+"between "+x[0]+" and "+x[1];
 }
 
-function ff(file){
-    return file.substr(0,63).toLowerCase();
+function ff(file,x){
+    return file.substr(0,x||63).toLowerCase();
 }
