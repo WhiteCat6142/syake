@@ -24,7 +24,7 @@ function update(file,stamp,id,node){
 		if(rows.length!=0)return;
 		readLine(nodeUrl(node,"get",file)+"/"+stamp+"/"+id,function(body){
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
-			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp,id,x[3]);
+			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp|0,id,x[3]);
 		});
 	});
     });
@@ -140,8 +140,13 @@ function readLine(url,callback,done){
 	}).catch(function(e){
         if(e.code=="ECONNREFUSED"&&e.code=="ETIMEDOUT")return;
 		console.log(e);
-		console.log("bye "+nodes[i]);
+		console.log(url);
+		if(api.config.del){
+		var node = url.match(/http:\/\/(.*?\/.*?)\/.*/)[1];
+		var i= nodes.indexOf(node);
+		console.log("bye "+node+" "+i);
         delete nodes[i];
+		}
     });
 }
 
