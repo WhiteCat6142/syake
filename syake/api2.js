@@ -87,7 +87,7 @@ exports.threads = {
                   try {
                   yield trx.raw("CREATE TABLE " + ff(file) + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield trx("threads").insert({stamp:t,title:title,dat:t,file:file});
-                  yield trx.raw("CREATE index "+ff(file)+"_sindex on "+file+"(stamp);");
+                  yield trx.raw("CREATE index "+ff(file)+"_sindex on "+ff(file)+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
                   } catch (e) {console.log(e);}
