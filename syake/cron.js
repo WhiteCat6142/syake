@@ -30,11 +30,12 @@ function update(file,stamp,id,node){
     });
 }
 function readAll(node,file){
-    api.threads.create(api.getTitle(file));
+    api.threads.create(api.getTitle(file),function() {
     readLine(nodeUrl(node,"get",file,api.config.range.newThread),function(body){
         const x = body.match(/(\d+)<>(.{32})<>(.*)/);
         api.thread.post(file,x[1]|0,x[2],x[3]);
     });
+	});
 }
 function readHead(node,file){
     const t = api.config.range.head;
