@@ -10,7 +10,7 @@ const api = require("./syake/api2");
 const cache = require("comp-cache");
 
 app.use(function(req, res, next){
-  if(!api.host)api.host="http://"+req.hostname+":3000";
+  if(!api.host)api.host="http://"+req.hostname+":"+(process.env.PORT ||3000);
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
@@ -56,6 +56,6 @@ require('./syake/gateway').set(gateway);
 //app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
 app.use(function(req, res, next){res.sendStatus(404);});
 
-http.createServer(app).listen(3000, function(){
+http.createServer(app).listen(process.env.PORT ||3000, function(){
   console.log("Express server started");
 });
