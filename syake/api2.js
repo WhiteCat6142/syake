@@ -33,7 +33,7 @@ var spamt=au.read("file/spam.txt","txt");
 knex.schema.hasTable('threads').then(function (exists) {
     if (!exists) {
         knex.raw("CREATE TABLE threads (\
-tid INTEGER NOT NULL PRIMARY KEY,\
+tid SERIAL PRIMARY KEY,\
 stamp INTEGER NOT NULL,\
 records INTEGER NOT NULL DEFAULT 0,\
 title TEXT NOT NULL UNIQUE,\
