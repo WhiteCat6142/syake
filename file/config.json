@@ -1,5 +1,5 @@
 {
-    "vistor":"*",
+    "vistor":".*",
     "user":"jhh:hbgjkbhjjjnnlkn",
     "nodes":[
         "node.shingetsu.info:8000/server.cgi",
