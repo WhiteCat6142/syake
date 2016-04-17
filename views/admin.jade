@@ -2,6 +2,7 @@ extends base
 
 block content
  .col-md-9
+  h3 nodes
   ul
    each node in nodes
     li
@@ -10,6 +11,12 @@ block content
   form(action='/admin.cgi/node' method='post')
    input(name="node" type="text")
    button(type="submit") Add
+  h3 friends
+  ul
+   each node in friends
+    li
+     |!{node}
+  h3 threads
   ul
    each thread in x
     li

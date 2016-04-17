@@ -1,13 +1,14 @@
 {
     "vistor":"(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)",
     "user":"admin:p0ss",
-    "host":"http://10.0.0.131:3000",
-    "//porto":"http://shingetsu.ygch.net/mobile.cgi",
     "nodes":[
         "node.shingetsu.info:8000/server.cgi",
         "ygg.io/server",
         "rep4649.ddo.jp:8000/server.cgi",
         "","","",""],
+    "join":[],
+    "friends":[],
+    "update":false,
     "range":{
         "node":2,
         "head":4,
@@ -19,7 +20,6 @@
         "title": "shinGETsu",
         "description": "shinGETsu's comments",
         "feed_url": "/gateway.cgi/rss",
-        "site_url": "http://10.0.0.131:3000",
         "image_url": "/favicon.ico",
         "author": "WhiteCat6142",
         "language": "ja"

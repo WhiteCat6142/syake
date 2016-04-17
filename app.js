@@ -14,15 +14,15 @@ app.use(function(req, res, next){
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
+app.use("/file",express.static('cache',{maxAge:86400000*31,etag:false,lastModified:false}));
+app.use(compression({threshold:0}));
+app.use("/",express.static('www',{maxAge:86400000*7}));
+
 app.use(logger('dev'));
 
 app.use(cache.get);
 app.use(cache.put);
 api.update.on("update",cache.clear);
-
-app.use("/file",express.static('cache',{maxAge:86400000*7}));
-app.use(compression({threshold:0}));
-app.use("/",express.static('www',{maxAge:86400000}));
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));

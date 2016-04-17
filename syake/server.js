@@ -8,15 +8,12 @@ function ping(req, res) {
 	res.end("PONG\n"+req.ip);
 }
 function node(req, res) {
-    res.end("");
-	//res.end(nodes[Math.floor(Math.random()*nodes.length)]);
+	res.end(nodes[Math.floor(Math.random()*nodes.length)]);
 }
 function join(req, res) {
  const node = req.node;
  res.end("WELCOME");
- nodeManeger.ping(node).then(function(isAlive){
-	 if(nodes.indexOf(node)==-1)nodes.push(node);
- }).catch(onErr(res));
+ api.config.friends.push(node);
 }
 function bye(req, res) {
  const node = req.node;
@@ -69,7 +66,7 @@ function recent(req, res) {
 	if(node.lastIndexOf(":")==0){
 		var ip = req.ip;
 		if(ip.startsWith("::ffff:"))ip=ip.substr(7);
-		if(ip.indexOf(":")!=-1)ip="["+ip+"]";
+		else if(ip.indexOf(":")!=-1)ip="["+ip+"]";
 		node=ip+node;
 	}
 	req.node=node;
