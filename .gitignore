@@ -3,3 +3,5 @@ node_modules/
 cache/
 record.sqlite3
 record.sqlite3-journal
+dbfix.js
+*.png

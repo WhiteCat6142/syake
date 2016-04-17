@@ -1,5 +1,8 @@
 "use strict";
 
+var pg = require('pg');
+pg.defaults.ssl = true;
+
 const crypto = require('crypto');
 const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
@@ -19,7 +22,11 @@ exports.unkownThreads=[];
 var config=au.read("./file/config.json","json");
 exports.__defineGetter__("config",function(){return config.data;});
 
-const knex = require('knex')(exports.config.db);
+const knex = require('knex')({
+  client: 'pg',
+  connection: process.env.DATABASE_URL,
+  searchPath: 'knex,public'
+});
 
 var spamt=au.read("file/spam.txt","txt");
 
