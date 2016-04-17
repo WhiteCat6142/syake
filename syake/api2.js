@@ -127,7 +127,7 @@ exports.thread = {
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id){console.log(id);throw new Error("Abnormal MD5");}}
 		else{id=md5;}
-        add(file,stamp,id,body);
+        add(file,stamp|0,id,body);
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
