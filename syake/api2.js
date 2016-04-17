@@ -63,6 +63,7 @@ exports.threads = {
             o="*,group_concat(tag) as tags";
             s+" join (select tag.tag,ttt.id from ttt join tag on ttt.tag = tag.id) on tid=id group by tid;";
         }*/
+        s=s.catch(function(){return [];});
         if(option.addDate)return s.then(exports.addDate);
 		return s;
 	},
@@ -100,7 +101,7 @@ exports.thread = {
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.id)s=s.andWhere("id",option.id);
 		if(option.limit&&option.offset&&(option.offset>=0))s=s.whereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
-		return s.orderBy("stamp","asc");
+		return s.orderBy("stamp","asc").catch(function(){return [];});
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
@@ -133,7 +134,7 @@ exports.spam=function(id){
     return knex.select("id").from("spam").where("id",id).then(function(rows){
         if(rows.length==0)return Promise.resolve();
         else return Promise.reject();
-    });
+    },function(){return Promise.resolve();});
 };
 
 exports.post = function (file, name, mail, body, time, subject) {
