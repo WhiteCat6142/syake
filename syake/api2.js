@@ -85,9 +85,9 @@ exports.threads = {
           knex.transaction(function(trx) {
               return co(function*(){
                   try {
-                  yield trx.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
+                  yield trx.raw("CREATE TABLE " + ff(file) + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield trx("threads").insert({stamp:t,title:title,dat:t,file:file});
-                  yield trx.raw("CREATE index "+file+"_sindex on "+file+"(stamp);");
+                  yield trx.raw("CREATE index "+ff(file)+"_sindex on "+file+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
                   } catch (e) {console.log(e);}
@@ -107,7 +107,7 @@ exports.threads = {
 };
 exports.thread = {
 	get:function(file,option){
-		var s = knex.select((option.head)?["stamp","id"]:undefined).from(file);
+		var s = knex.select((option.head)?["stamp","id"]:undefined).from(ff(file));
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.id)s=s.andWhere("id",option.id);
 		if(option.limit&&option.offset&&(option.offset>=0))s=s.whereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
@@ -161,7 +161,7 @@ exports.post = function (file, name, mail, body, time, subject) {
 const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        return trx.select("stamp","id").from(file).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
+        return trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) {
                 if(stamp!==rows[0].stamp)knex("spam").insert({id:id});
@@ -180,7 +180,7 @@ function add(file,stamp,id,content){
             exports.update.emit('update', file, stamp, id, content);
             return Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:knex.raw("records + 1")}),
-                trx(file).insert({stamp:stamp,id:id,content:content})
+                trx(ff(file)).insert({stamp:stamp,id:id,content:content})
             ]);
         });
     });
@@ -276,4 +276,8 @@ function times(time){
 	if(x[1]=="")return s+">= "+x[0];
 	if(x[0]=="")return s+"<= "+x[1];
 	return s+"between "+x[0]+" and "+x[1];
+}
+
+function ff(file){
+    return file.substr(0,63).toLowerCase();
 }
