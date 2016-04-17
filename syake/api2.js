@@ -110,8 +110,8 @@ exports.thread = {
 		var s = knex.select((option.head)?["stamp","id"]:undefined).from(ff(file));
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.id)s=s.andWhere("id",option.id);
-		if(option.limit&&option.offset&&(option.offset>=0))s=s.whereBetween("rowid",[option.offset,(option.limit+option.offset-1)]);
-		return s.orderBy("stamp","asc").catch(function(){return [];});
+		if(option.limit&&option.offset&&(option.offset>=0))s=s.limit(option.limit).offset(option.offset);
+		return s.orderBy("stamp","asc").catch(function(e){console.log(e);return [];});
 	},
 	post:function(file,stamp,id,body){
 		if(!body)throw new Error("Empty Message");
