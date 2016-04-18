@@ -6,7 +6,7 @@
         "ygg.io/server",
         "rep4649.ddo.jp:8000/server.cgi"],
     "join":["ygg.io/server"],
-    "friends":["ygg.io/server"],
+    "friends":[],
     "update":true,
     "range":{
         "node":2,
