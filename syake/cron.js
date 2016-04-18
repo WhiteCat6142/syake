@@ -99,7 +99,7 @@ setInterval(function(){
 },api.config.range.interval*1000);
 
 setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join"));
+	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"server.cgi");
 },30*60);
 
 if(api.config.range.first){
