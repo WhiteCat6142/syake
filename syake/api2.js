@@ -16,6 +16,8 @@ exports.update=new EventEmitter();
 
 exports.unkownThreads=[];
 
+exports.port=3000;
+
 var config=au.read("./file/config.json","json");
 exports.__defineGetter__("config",function(){return config.data;});
 

@@ -10,7 +10,7 @@ exports.nodes=nodes;
 
 if(api.config.update){
 api.update.on("update",function(file,stamp,id){
-	const s="/"+file+"/"+stamp+"/"+id+"/:"+(process.env.PORT ||3000)+"+server.cgi";
+	const s="/"+file+"/"+stamp+"/"+id+"/:"+api.port+"+server.cgi";
     for(var n of api.config.friends){
         get(nodeUrl(n,"update")+s);
      }
@@ -165,9 +165,9 @@ setInterval(function(){
         readNode(nodes[numt++]);
 },api.config.range.interval*1000);
 
-for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
+for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+api.port+"+server.cgi");
 setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
+	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+api.port+"+server.cgi");
 },30*60*1000);
 
 if(api.config.range.first){
