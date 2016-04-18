@@ -124,11 +124,7 @@ exports.thread = {
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
-            if(option.html){return rows.map(conv(file)).map(function(ele){
-                ele.body=tohtml(ele.body);
-                return ele;
-            });}
-            return rows.map(conv(file));
+            return rows.map(conv(file,option.html));
         });
     }
 };
@@ -206,7 +202,7 @@ exports.addDate = function(rows){
 	}
 	return rows;
 };
-function conv(file){
+function conv(file,html){
     return function(row) {
     	var time = new Date(row.stamp*1000).toString();
 		time = time.substring(0,time.lastIndexOf(" GMT"));
@@ -218,6 +214,7 @@ function conv(file){
 		}
         r.body=r.body||"";
         if(r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
+        if(html)r.body=tohtml(r.body);
         return r;
     };
 }
