@@ -42,7 +42,7 @@ function rss(req,res){
     const rss = new RSS(api.config.feed);
     const recent = JSON.parse(JSON.stringify(api.recent)).reverse();
     for(var i=0;i<recent.length;i++){
-        var body=api.conv(recent[i].file)(recent[i]);
+        var body=api.conv(recent[i].file,true)(recent[i]);
         var x = recent[i];
         rss.item({
             url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
