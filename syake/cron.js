@@ -93,21 +93,6 @@ function readNode(node,t){
 	});
 }
 
-setInterval(function(){
-        if(!this.numt||this.numt>=nodes.length)this.numt=0;
-        readNode(nodes[this.numt++]);
-},api.config.range.interval*1000);
-
-for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
-setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
-},30*60*1000);
-
-if(api.config.range.first){
-    const t = api.config.range.first;
-    for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
-}
-
 const ag= new http.Agent({maxSockets:64});
 function get(url){
 	return new Promise(function(resolve, reject){
@@ -172,4 +157,20 @@ function nodeUrl(node,m,file,t){
 	if((m!="get")&&(m!="head"))console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
     const s = ((file)?"/"+file:"")+((t)?"/"+time(t):"");
 	return "http://"+node+"/"+m+s;
+}
+
+var numt=0;
+setInterval(function(){
+        if(numt>=nodes.length)numt=0;
+        readNode(nodes[numt++]);
+},api.config.range.interval*1000);
+
+for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
+setInterval(function(){
+	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"+server.cgi");
+},30*60*1000);
+
+if(api.config.range.first){
+    const t = api.config.range.first;
+    for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
 }
