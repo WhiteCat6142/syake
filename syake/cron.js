@@ -100,7 +100,7 @@ setInterval(function(){
 
 setInterval(function(){
 	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/:"+(process.env.PORT ||3000)+"server.cgi");
-},30*60);
+},30*60*1000);
 
 if(api.config.range.first){
     const t = api.config.range.first;
