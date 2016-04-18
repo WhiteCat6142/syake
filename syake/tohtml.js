@@ -2,7 +2,7 @@ const image=["png","bmp","gif","jpg","jpeg","bin","tif","tiff"]
 
 
 exports.t=function(body) {
-        var b3 = body.match(/h?ttps?:\/\/[0-9-_a-zA-Z.\/!#$&+,:;=@\[\]\?]+/g);
+        var b3 = body.match(/h?ttps?:\/\/[0-9-_a-zA-Z.\/%!#$&+,:;=@\[\]\?]+/g);
         if (b3) {
           b3.forEach(function (ele) {
             var link = (ele[0] == 'h') ? ele : 'h' + ele;
