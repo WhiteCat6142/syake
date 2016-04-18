@@ -99,7 +99,7 @@ function get(url){
 		const o=Url.parse(url);
 		o.agent=ag;
 		const request=http.request(o, function(res){
-            if(res.statusCode!=200)reject(res.statusCode);
+            if(res.statusCode!=200)reject(res);
 				var bufs = []; 
 				res.on('data', function(chunk){bufs.push(chunk);});
 				res.on('end', function(){
@@ -178,6 +178,6 @@ if(api.config.range.first){
 for(var i=0;i<3;i++){
 	readLine(nodeUrl("ygg.io/server","node"),function(node) {
 		api.config.friends.push(node);
-		readLine(nodeUrl(node,"join")+"/:"+api.port+"+server.cgi");
+		readLine(nodeUrl(node,"join")+"/morning-mountain-32572.herokuapp.com:80+server.cgi");
 	});
 }
