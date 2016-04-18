@@ -18,7 +18,7 @@ api.update.on("update",function(file,stamp,id){
 }
 
 function update(file,stamp,id,node){
-	console.log("update:"+file+stamp+id+node);
+	console.log("update:"+file+" "+stamp+" "+id+" "+node);
     api.spam(id).then(function(){
 	api.thread.get(file,{time:stamp,id:id,head:true}).then(function(rows){
 		if(rows.length!=0)return;

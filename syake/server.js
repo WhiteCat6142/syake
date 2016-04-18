@@ -18,8 +18,9 @@ function join(req, res) {
 function bye(req, res) {
  const node = req.node;
  //if(!node.startsWith(req.ip))throw "ip doesn't match the node";
- const i=nodes.indexOf(node);
- if(i!=-1)delete nodes[i];
+ const n= api.config.friends;
+ const i=n.indexOf(node);
+ if(i!=-1)delete n[i];
  res.end("BYEBYE");
 }
 function have(req, res) {
