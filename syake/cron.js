@@ -178,6 +178,6 @@ if(api.config.range.first){
 for(var i=0;i<3;i++){
 	readLine(nodeUrl("ygg.io/server","node"),function(node) {
 		api.config.friends.push(node);
-		readLine(nodeUrl(node,"join"));
+		readLine(nodeUrl(node,"join")+"/:"+api.port+"+server.cgi");
 	});
 }
