@@ -93,7 +93,7 @@ function readNode(node,t){
 	});
 }
 
-const ag= new http.Agent({maxSockets:64});
+const ag= new http.Agent({maxSockets:16});
 function get(url){
 	return new Promise(function(resolve, reject){
 		const o=Url.parse(url);
