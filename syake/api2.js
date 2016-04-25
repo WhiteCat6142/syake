@@ -34,19 +34,16 @@ var spamt=au.read("file/spam.txt","txt");
 
 knex.schema.hasTable('threads').then(function (exists) {
     if (!exists) {
-        knex.raw("CREATE TABLE threads (\
-tid SERIAL PRIMARY KEY,\
-stamp INTEGER NOT NULL,\
-records INTEGER NOT NULL DEFAULT 0,\
-title TEXT NOT NULL UNIQUE,\
-dat INTEGER NOT NULL UNIQUE,\
-file TEXT NOT NULL UNIQUE,\
-laststamp INTEGER,\
-lastid CHAR(32)\
-);").then(function () {
-                knex.raw("CREATE unique index tindex on threads(title,file,dat);").then();
-                knex.raw("CREATE index sindex on threads(stamp);").then();
-            });
+        knex.schema.createTable("threads", function (table) {
+            table.increments("tid").primary();
+            table.integer("stamp").notNullable().index();
+            table.integer("records").notNullable();
+            table.string("title").unique().notNullable();
+            table.integer("dat").unique().notNullable();
+            table.string("file").unique().notNullable();
+            table.integer("laststamp");
+            table.string("lastid", 32);
+        }).then();
 
         knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
             knex.raw("CREATE unique index spamindex on spam(id);").then();
@@ -116,20 +113,32 @@ exports.thread = {
 		return s.orderBy("stamp","asc").catch(function(e){console.log(e);return [];});
 	},
 	post:function(file,stamp,id,body){
-		if(!body)throw new Error("Empty Message");
+        try{
+		if(!body)throw "Empty Message";
         var ss=spamt.data.split("[\n\r]+");
-        if(!exports.config.image){ss.push("attach:");}
         for (var s of ss) {
-            if (body.match(s)) {
-                knex("spam").insert({id:id});
-                console.log("spam:" + body);
-                return;
-            }
+            if (body.match(s)) {throw "spam";}
         }
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
-		if(id){if(md5!=id){console.log(id);throw new Error("Abnormal MD5");}}
-		else{id=md5;}
+		if(id){if(md5!=id){console.log(id);throw "Abnormal MD5";}}
+        else { id = md5; }
+        if (body.indexOf("attach:") != -1) {
+            if (!exports.config.image) { throw "no file mode"; }
+            const suffix = body.match(/suffix:([^(<>)]*)/)[1];
+            const attach = body.match(/attach:([^(<>)]*)/)[1];
+            const data = new Buffer(attach, "base64");
+            const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
+            const name = md5 + "." + suffix;
+            body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
+            console.log(name);
+            fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
+        }
         add(file,stamp|0,id,body);
+        }catch(e){
+            knex("spam").insert({id:id});
+            console.log(e);
+            console.log(id+" "+body);
+        }
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
@@ -164,16 +173,6 @@ function add(file,stamp,id,content){
             if (rows.length > 0) {
                 if(stamp!==rows[0].stamp)knex("spam").insert({id:id});
                 return;
-            }
-            if (content.indexOf("attach:") != -1) {
-                const suffix = content.match(/suffix:([^(<>)]*)/)[1];
-                const attach = content.match(/attach:([^(<>)]*)/)[1];
-                const data = new Buffer(attach, "base64");
-                const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
-                const name = md5 + "." + suffix;
-                content = content.replace(/attach:[^(<>)]*/g, ("attach:" + name));
-                console.log(name);
-                fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
             }
             exports.update.emit('update', file, stamp, id, content);
             return Promise.all([

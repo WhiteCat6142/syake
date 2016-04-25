@@ -4,6 +4,8 @@ block append scripts
  script(type="text/javascript").
   window.onload=function(){document.getElementById("cmd").value="post";};
  script(type="text/javascript" src="/js/bbs.js")
+ link(rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/css/lightbox.min.css" integrity="sha384-pnkRj/o9mh07rfWxV9yY0Tik4Cn+tYLX+hu+gfN2s5bd7hwM1q5rAqGyA21Iz17u" crossorigin="anonymous")
+ script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/js/lightbox.min.js" integrity="sha384-Gbd53NjH9fTrGfOvlidG2xykVSeto8+P5/CSWqRcKdFfGgzi3Z1oNS07vq6qRkRs" crossorigin="anonymous")
 
 block content
     each msg in messages
