@@ -69,7 +69,11 @@ function readHead(node,file){
             //limit new<=30*/
             for(var i=0;i<next.length;i++){
                 var x = next[i].split("<>");
-                update(file,x[0],x[1],node);
+                api.spam(x[1]).then(function() {
+					update(file,x[0],x[1],node);
+				},function() {
+					
+				});
             }
         });
 	});
