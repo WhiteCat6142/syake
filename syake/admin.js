@@ -27,6 +27,11 @@ app.post('/node',function(req,res){
     nodeManeger.nodes.push(node);
     res.redirect("back");
 });
+app.post('/friend',function(req,res){
+    const node = req.body.node;
+    nodeManeger.friends.push(node);
+    res.redirect("back");
+});
 app.get('/node/del/:node',function(req,res){
     const node =req.params.node.replace(/\+/g,"/");
     const i =nodeManeger.nodes.indexOf(node);
