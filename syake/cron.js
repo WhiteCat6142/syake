@@ -10,7 +10,7 @@ exports.nodes=nodes;
 
 if(api.config.update){
 api.update.on("update",function(file,stamp,id){
-	if(stamp<Date.now()-24*60*60)return;
+	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
 	const s="/"+file+"/"+stamp+"/"+id+"/:"+api.port+"+server.cgi";
     for(var n of api.config.friends){
         get(nodeUrl(n,"update")+s);
@@ -143,7 +143,7 @@ function readLine(url,callback,done){
 
 const range = 7;
 function time(r){
-	return (Math.round(new Date().getTime()/1000)-(r||range)*24*60*60)+"-";
+	return (Math.round(Date.now()/1000)-(r||range)*24*60*60)+"-";
 }
 
 exports.ping = function(node){
