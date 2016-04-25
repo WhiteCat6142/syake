@@ -29,7 +29,7 @@ app.post('/node',function(req,res){
 });
 app.post('/friend',function(req,res){
     const node = req.body.node;
-    nodeManeger.friends.push(node);
+    api.config.friends.push(node);
     res.redirect("back");
 });
 app.get('/node/del/:node',function(req,res){
