@@ -178,6 +178,7 @@ if(api.config.range.first){
 for(var i=0;i<3;i++){
 	readLine(nodeUrl("ygg.io/server","node"),function(node) {
 		api.config.friends.push(node);
-		readLine(nodeUrl(node,"join")+"/morning-mountain-32572.herokuapp.com:80+server.cgi").then(console.log);
+		api.config.join.push(node);
+		readLine(nodeUrl(node,"join")+"/syake.herokuapp.com:80+server.cgi").then(console.log);
 	});
 }
