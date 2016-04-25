@@ -130,7 +130,7 @@ exports.thread = {
         }catch(e){
             knex("spam").insert({id:id});
             console.log(e);
-            console.log(id+" "+body);
+            console.log(id+" "+body.substr(0,32));
         }
 	},
     convert:function(file,option) {
