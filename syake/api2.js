@@ -135,7 +135,7 @@ exports.thread = {
         }
         add(file,stamp|0,id,body);
         }catch(e){
-            knex("spam").insert({id:id});
+            knex("spam").insert({id:id}).then();
             console.log(e);
             console.log(id+" "+body.substr(0,32));
         }
@@ -171,7 +171,7 @@ function add(file,stamp,id,content){
         return trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) {
-                if(stamp!==rows[0].stamp)knex("spam").insert({id:id});
+                if(stamp!==rows[0].stamp)return knex("spam").insert({id:id});
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
@@ -265,7 +265,7 @@ function decode(s){
 }
 exports.getTitle = function(file){return decode(file.substring("thread_".length));};
 
-function now(){return Math.round(new Date().getTime()/1000);}
+function now(){return Math.round(Date.now()/1000);}
 
 function times(time){
 	const x = time.split("-");
