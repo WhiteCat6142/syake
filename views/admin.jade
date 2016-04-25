@@ -16,6 +16,9 @@ block content
    each node in friends
     li
      |!{node}
+  form(action='/admin.cgi/friend' method='post')
+   input(name="node" type="text")
+   button(type="submit") Add
   h3 threads
   ul
    each thread in x

@@ -10,6 +10,7 @@ exports.nodes=nodes;
 
 if(api.config.update){
 api.update.on("update",function(file,stamp,id){
+	if(stamp<Date.now()-24*60*60)return;
 	const s="/"+file+"/"+stamp+"/"+id+"/:"+api.port+"+server.cgi";
     for(var n of api.config.friends){
         get(nodeUrl(n,"update")+s);
