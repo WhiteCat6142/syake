@@ -271,10 +271,10 @@ function now(){return Math.round(Date.now()/1000);}
 function times(time){
 	const x = time.split("-");
 	var s="stamp ";
-	if(x.length==1)return s+"= "+x[0];
-	if(x[1]=="")return s+">= "+x[0];
-	if(x[0]=="")return s+"<= "+x[1];
-	return s+"between "+x[0]+" and "+x[1];
+	if(x.length==1)return s+"= "+x[0]|0;
+	if(x[1]=="")return s+">= "+x[0]|0;
+	if(x[0]=="")return s+"<= "+x[1]|0;
+	return s+"between "+x[0]|0+" and "+x[1]|0;
 }
 
 function ff(file,x){
