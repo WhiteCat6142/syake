@@ -170,9 +170,10 @@ setInterval(function(){
         readNode(nodes[numt++]);
 },api.config.range.interval*1000);
 
-for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/syake.herokuapp.com:80+server.cgi");
+const host="syake.herokuapp.com:80";
+for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+host+"+server.cgi");
 setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/syake.herokuapp.com:80+server.cgi");
+	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+host+"+server.cgi");
 },15*60*1000);
 
 if(api.config.range.first){
@@ -181,9 +182,9 @@ if(api.config.range.first){
 }
 
 for(var i=0;i<3;i++){
-	readLine(nodeUrl("ygg.io/server","node"),function(node) {
+	readLine(nodeUrl(api.config.nodes[i],"node"),function(node) {
 		api.config.friends.push(node);
 		api.config.join.push(node);
-		readLine(nodeUrl(node,"join")+"/syake.herokuapp.com:80+server.cgi");
+		readLine(nodeUrl(node,"join")+"/"+host+"+server.cgi");
 	});
 }

@@ -10,7 +10,7 @@ const api = require("./syake/api2");
 const cache = require("comp-cache");
 
 app.use(function(req, res, next){
-  if(!api.host)api.host="http://"+req.hostname+":"+(process.env.PORT ||3000);
+  if(!api.host)api.host="http://"+req.hostname;
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
