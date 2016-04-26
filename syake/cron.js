@@ -129,8 +129,8 @@ function readLine(url,callback,done){
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
         if(done)done();
 	}).catch(function(e){
-        if(e.code=="ECONNREFUSED"&&e.code=="ETIMEDOUT")return;
-		console.log(e);
+        if(e.code=="ECONNREFUSED"||e.code=="ETIMEDOUT")return;
+		console.log(e.code);
 		console.log(url);
 		if(api.config.del){
 		var node = url.match(/http:\/\/(.*?\/.*?)\/.*/)[1];

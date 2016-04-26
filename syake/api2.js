@@ -169,7 +169,7 @@ function add(file,stamp,id,content){
             }
             exports.update.emit('update', file, stamp, id, content);
             return Promise.all([
-                trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:knex.raw("records + 1")}),
+                trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(file).insert({stamp:stamp,id:id,content:content})
             ]);
         });
@@ -263,8 +263,8 @@ function now(){return Math.round(Date.now()/1000);}
 function times(time){
 	const x = time.split("-");
 	var s="stamp ";
-	if(x.length==1)return s+"= "+x[0];
-	if(x[1]=="")return s+">= "+x[0];
-	if(x[0]=="")return s+"<= "+x[1];
-	return s+"between "+x[0]+" and "+x[1];
+	if(x.length==1)return s+"= "+x[0]|0;
+	if(x[1]=="")return s+">= "+x[0]|0;
+	if(x[0]=="")return s+"<= "+x[1]|0;
+	return s+"between "+x[0]|0+" and "+x[1]|0;
 }
