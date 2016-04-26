@@ -19,11 +19,11 @@ api.update.on("update",function(file,stamp,id){
 }
 
 function update(file,stamp,id,node){
-	console.log("update:"+file+" "+stamp+" "+id+" "+node);
     api.spam(id).then(function(){
 	api.thread.get(file,{time:stamp,id:id,head:true}).then(function(rows){
 		if(rows.length!=0)return;
 		readLine(nodeUrl(node,"get",file)+"/"+stamp+"/"+id,function(body){
+			console.log("update:"+file+" "+stamp+" "+id+" "+node);
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp|0,id,x[3]);
 		});
@@ -173,7 +173,7 @@ setInterval(function(){
 for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/syake.herokuapp.com:80+server.cgi");
 setInterval(function(){
 	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/syake.herokuapp.com:80+server.cgi");
-},10*60*1000);
+},15*60*1000);
 
 if(api.config.range.first){
     const t = api.config.range.first;
