@@ -168,11 +168,11 @@ exports.post = function (file, name, mail, body, time, subject) {
 const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        console.log(trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).toString());
+        console.log(trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id).toString());
         return trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) {
-                if(stamp!==rows[0].stamp)return knex("spam").insert({id:id});
+                if(stamp!==rows[0].stamp)console.log("duplicate post!");
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
