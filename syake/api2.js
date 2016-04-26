@@ -164,7 +164,7 @@ function add(file,stamp,id,content){
         return trx.select("stamp","id").from(file).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
         .then(function(rows){
             if (rows.length > 0) {
-                if(stamp!==rows[0].stamp)return knex("spam").insert({id:id});
+                if(stamp!==rows[0].stamp)console.log("duplicate post!");
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
