@@ -177,7 +177,7 @@ function add(file,stamp,id,content){
             }
             exports.update.emit('update', file, stamp, id, content);
             return Promise.all([
-                trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:knex.raw("records + 1")}),
+                trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(ff(file)).insert({stamp:stamp,id:id,content:content})
             ]);
         });
