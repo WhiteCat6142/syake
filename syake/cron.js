@@ -16,6 +16,13 @@ api.update.on("update",function(file,stamp,id){
         get(nodeUrl(n,"update")+s);
      }
 });
+for(var n of api.config.nodes){
+	readLine(nodeUrl(n,"node"),function(node) {
+		api.config.friends.push(node);
+		api.config.join.push(node);
+		readLine(nodeUrl(node,"join")+"/"+host+"+server.cgi");
+	});
+}
 }
 
 function update(file,stamp,id,node){

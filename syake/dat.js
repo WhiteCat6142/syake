@@ -43,7 +43,7 @@ function dat(req,res){
             res.writeX(en(([
                 rows[i].name,
                 rows[i].mail,
-                rows[i].date+" ID:"+rows[i].id,
+                rows[i].date+" ID:???",
                 body,
                 (i==0)?row.title:""
             ].join("<>")+"\n")));
