@@ -50,7 +50,7 @@ function head(req, res) {
 }
 function update(req, res) {
 	res.end("OK");
-	nodeManeger.update(req.params.file,req.params.stamp,req.params.id,req.node).catch(function(){});
+	nodeManeger.update(req.params.file,req.params.stamp,req.params.id,req.node).catch(function(e){});
 }
 function recent(req, res) {
 	api.threads.get({time:req.params.time}).then(function(rows){
