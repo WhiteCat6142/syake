@@ -185,7 +185,7 @@ function add(file,stamp,id,content){
 }
 
 exports.update.on("update",function(file,stamp,id,content){
-    console.log(file,stamp,id,content.substring(0,16));
+    console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
     exports.recent.push({
         title:exports.getTitle(file),
         file:file,
