@@ -168,15 +168,15 @@ exports.post = function (file, name, mail, body, time, subject) {
 const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        console.log(trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id).toString());
-        return trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
-        .then(function(rows){
+        return co(function*(){
+            yield trx.raw("LOCK TABLE "+ff(file)+" IN EXCLUSIVE MODE;");
+            var rows = yield trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id);
             if (rows.length > 0) {
                 if(stamp!==rows[0].stamp)console.log("duplicate post!");
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
-            return Promise.all([
+            yield Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(ff(file)).insert({stamp:stamp,id:id,content:content})
             ]);
