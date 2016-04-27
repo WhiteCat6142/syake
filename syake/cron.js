@@ -19,15 +19,15 @@ api.update.on("update",function(file,stamp,id){
 }
 
 function update(file,stamp,id,node){
-    api.spam(id).then(function(){
-	api.thread.get(file,{time:stamp,id:id,head:true}).then(function(rows){
+    return api.spam(id)
+	.then(function(){return api.thread.get(file,{time:stamp,id:id,head:true});})
+	.then(function(rows){
 		if(rows.length!=0)return;
 		readLine(nodeUrl(node,"get",file)+"/"+stamp+"/"+id,function(body){
-			//console.log("update:"+file+" "+stamp+" "+id+" "+node);
+			console.log("update:"+id+" "+node);
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp|0,id,x[3]);
 		});
-	});
     });
 }
 function readAll(node,file){
