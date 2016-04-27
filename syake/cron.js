@@ -11,7 +11,7 @@ exports.nodes=nodes;
 if(api.config.update){
 api.update.on("update",function(file,stamp,id){
 	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
-	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+"+server.cgi";
+	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+":"+api.port+"+server.cgi";
     for(var n of api.config.friends){
         get(nodeUrl(n,"update")+s);
      }
@@ -170,9 +170,9 @@ setInterval(function(){
         readNode(nodes[numt++]);
 },api.config.range.interval*1000);
 
-for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+"+server.cgi");
+for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
 setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+"+server.cgi");
+	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
 },15*60*1000);
 
 if(api.config.range.first){

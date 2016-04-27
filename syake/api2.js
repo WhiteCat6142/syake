@@ -20,7 +20,7 @@ exports.update=new EventEmitter();
 exports.unkownThreads=[];
 
 exports.port=80;
-exports.host="syake.herokuapp.com:80";
+exports.host="syake.herokuapp.com";
 
 var config=au.read("./file/config.json","json");
 exports.__defineGetter__("config",function(){return config.data;});
