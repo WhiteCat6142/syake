@@ -169,7 +169,7 @@ const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
         return co(function*(){
-            yield trx.raw("LOCK TABLE "+ff(file)+" IN EXCLUSIVE MODE;");
+            yield trx.raw("LOCK TABLE "+ff(file)+" IN ACCESS EXCLUSIVE MODE;");
             var rows = yield trx.select("stamp","id").from(ff(file)).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id);
             if (rows.length > 0) {
                 if(stamp!==rows[0].stamp)console.log("duplicate post!");
