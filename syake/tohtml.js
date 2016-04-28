@@ -7,7 +7,7 @@ exports.t=function(body) {
           b3.forEach(function (ele) {
             var link = (ele[0] == 'h') ? ele : 'h' + ele;
             var i=link.lastIndexOf(".");
-            if ((i>0)&&(image.indexOf(link.substr(i+1))!=-1)) body = body.replace(ele, '<img class="lazy" data-src="' + link + '">');
+            if ((i>0)&&(image.indexOf(link.substr(i+1))!=-1)) body = body.replace(ele, '<a href="' + link + '" data-lightbox="image">' + '<img class="lazy" data-src="' + link + '"></a>');
              else body = body.replace(ele, '<a href="' + link + '">' + ele + '</a>');
           });
         }

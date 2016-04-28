@@ -25,4 +25,5 @@
       }
       window.addEventListener('resize', listen);
       window.addEventListener('scroll', listen);
+      listen();
       })();

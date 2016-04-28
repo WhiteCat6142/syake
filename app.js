@@ -22,6 +22,11 @@ app.use(logger('dev'));
 
 app.use(cache.get);
 app.use(cache.put);
+const fs = require("fs");
+fs.watch('views', function (event, path0) {
+		if (event !== "change") return;
+  cache.clear();
+});
 api.update.on("update",cache.clear);
 
 const bodyParser = require('body-parser');

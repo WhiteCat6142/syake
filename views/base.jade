@@ -15,7 +15,12 @@ html
         a.navbar-brand(href="/") 新月
    .container
      h1 #{title}
-     block content
+     .col-md-2
+      block lside
+     .col-md-7
+      block content
+     .col-md-3
+      block rside
    block scripts
     script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.min.js" integrity="sha384-fjThiGz46iluQSUrT72asLp107ZKlIZR8vvVdaeHsEmLlySEPhKvktuTNj0wtHIH" crossorigin="anonymous")
     script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/hogan.js/3.0.2/hogan.min.js" integrity="sha384-4s1wOXoPizqgXDR9ceVD5JFY9kD1rW2FCJkGdLPNTOn9CxeMvVRYVOIPb4LEdmFT" crossorigin="anonymous")
