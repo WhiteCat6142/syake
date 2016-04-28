@@ -1,7 +1,6 @@
 extends base
 
 block content
- .col-md-9
   h3 nodes
   ul
    each node in nodes
@@ -24,5 +23,5 @@ block content
    each thread in x
     li
      a(href="/admin.cgi/new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
- .col-md-3
+block rside
   a(href="/admin.cgi/refresh") refresh

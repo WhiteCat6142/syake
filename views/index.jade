@@ -5,14 +5,13 @@ block append scripts
   window.onload=function(){document.getElementById("cmd").value="post";};
  script(type="text/javascript" src="/js/index.js")
 
-block content
-    .container
-    .col-md-3
+
+block lside
      h1 タグ
      #tags
        each tag in tags
          a(href="/gateway.cgi/changes?tag="+tag) #{tag}
-    .col-md-6
+block content
      h1 スレッド
      ul(id="threads")
        each thread in threads
@@ -28,7 +27,7 @@ block content
         .card-text {{r}}comments
       |{{/ts}}
      a(id="changes") その他
-    .col-md-3
+block rside
      h1 リンク
      h2
       ul
