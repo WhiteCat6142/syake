@@ -17,7 +17,7 @@ function node(req, res) {
 function join(req, res) {
  const node = req.node;
  res.end("WELCOME");
- api.config.friends.push(node);
+ nodeManeger.addFriend(node);
 }
 function bye(req, res) {
  const node = req.node;

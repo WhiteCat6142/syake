@@ -143,6 +143,18 @@ exports.update=update;
 exports.read=readNode;
 exports.readAll=readAll;
 
+function join(node) {
+	readLine(nodeUrl(node,"join")+"/"+api.host+":"+api.port+"+server.cgi");
+}
+
+function addFriend(node) {
+	var f = api.config.friends;
+	if(f.indexOf(node)!=-1)return;
+	f.push(node);
+	join(node);
+}
+exports.addFriend=addFriend;
+
 function nodeUrl(node,m,file,t){
 	if((m!="get")&&(m!="head"))console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
     const s = ((file)?"/"+file:"")+((t)?"/"+time(t):"");
@@ -155,19 +167,16 @@ setInterval(function(){
         readNode(nodes[numt++]);
 },api.config.range.interval*1000);
 
+for(var n of api.config.friends)join(n);
+setInterval(function(){
+	for(var n of api.config.friends)join(n);
+},15*60*1000);
+
 if(api.config.update){
 for(var n of api.config.nodes){
-	readLine(nodeUrl(n,"node"),function(node) {
-		api.config.friends.push(node);
-		readLine(nodeUrl(node,"join")+"/"+api.host+":"+api.port+"+server.cgi");
-	});
+	readLine(nodeUrl(n,"node"),addFriend);
 }
 }
-
-for(var n of api.config.friends)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
-setInterval(function(){
-	for(var n of api.config.friends)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
-},15*60*1000);
 
 if(api.config.range.first){
     const t = api.config.range.first;
