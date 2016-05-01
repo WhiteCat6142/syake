@@ -7,8 +7,6 @@ const EventEmitter = require('events').EventEmitter;
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
-const tohtml = require('./tohtml').t;
-
 
 exports.recent=[];
 
@@ -124,7 +122,7 @@ exports.thread = {
             const name = md5 + "." + suffix;
             body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
             console.log(name);
-            fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
+            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (err) console.log(err); });
         }
         add(file,stamp|0,id,body);
         }catch(e){
@@ -135,7 +133,7 @@ exports.thread = {
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
-            return rows.map(conv(file,option.html));
+            return rows.map(conv(file));
         });
     }
 };
@@ -168,6 +166,7 @@ function add(file,stamp,id,content){
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
+            console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
             return Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(file).insert({stamp:stamp,id:id,content:content})
@@ -177,7 +176,6 @@ function add(file,stamp,id,content){
 }
 
 exports.update.on("update",function(file,stamp,id,content){
-    console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
     exports.recent.push({
         title:exports.getTitle(file),
         file:file,
@@ -203,7 +201,7 @@ exports.addDate = function(rows){
 	}
 	return rows;
 };
-function conv(file,html){
+function conv(file){
     return function(row) {
     	var time = new Date(row.stamp*1000).toString();
 		time = time.substring(0,time.lastIndexOf(" GMT"));
@@ -215,28 +213,10 @@ function conv(file,html){
 		}
         r.body=r.body||"";
         if(r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
-        if(html)r.body=tohtml(r.body);
         return r;
     };
 }
 exports.conv=conv;
-
-
-exports.attach = function (file) {
-    return function (rows) {
-        if(!exports.config.image)return rows;
-        return co(function* () {
-            for (var i = 0; i < rows.length; i++) {
-                var s = rows[i].content;
-                if (s.indexOf("attach:") === -1) continue;
-                var j = s.match(/attach:([^(<>)]*)/);
-                var buf = yield co.wrap(fs.readFile)("./cache/" + file + "/" + j[1]);
-                rows[i].content = s.replace(/attach:([^(<>)]*)/, "attach:" + buf.toString("base64"));
-            }
-            return rows;
-        });
-    };
-};
 
 exports.notice=function(file,node){
     const unkownThreads = exports.unkownThreads;
@@ -248,15 +228,9 @@ exports.notice=function(file,node){
     exports.update.emit("notice",file,title,node);
 };
 
-function encode(s){
-    return new Buffer(s).toString("hex").toUpperCase();
-}
-function threadFile(title){return "thread_"+encode(title);};
+function threadFile(title){return "thread_"+new Buffer(title).toString("hex").toUpperCase();};
 
-function decode(s){
-    return new Buffer(s.toLowerCase(),"hex").toString();
-}
-exports.getTitle = function(file){return decode(file.substring("thread_".length));};
+exports.getTitle = function(file){return new Buffer(file.substring("thread_".length).toLowerCase(),"hex").toString();};
 
 function now(){return Math.round(Date.now()/1000);}
 

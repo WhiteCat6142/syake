@@ -2,6 +2,7 @@
 
 const api = require('./api2');
 const nodeManeger = require('./cron');
+const co = require('co');
 var nodes = nodeManeger.nodes;
 
 function ping(req, res) {
@@ -31,7 +32,7 @@ function have(req, res) {
 }
 function get(req, res) {
 	const file=req.params.file;
-	api.thread.get(file,{time:req.params.time,id:req.params.id}).then(api.attach(file)).then(function(rows){
+	api.thread.get(file,{time:req.params.time,id:req.params.id}).then(attach(file)).then(function(rows){
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content);
@@ -39,6 +40,22 @@ function get(req, res) {
 		res.end();
 	});
 }
+function attach(file) {
+    return function (rows) {
+        if(!api.config.image)return rows;
+        return co(function* () {
+            for (var i = 0; i < rows.length; i++) {
+                var s = rows[i].content;
+                if (s.indexOf("attach:") === -1) continue;
+                var j = s.match(/attach:([^(<>)]*)/);
+                var buf = yield co.wrap(fs.readFile)("./cache/" + file + "/" + j[1]);
+                rows[i].content = s.replace(/attach:([^(<>)]*)/, "attach:" + buf.toString("base64"));
+            }
+            return rows;
+        });
+    };
+}
+
 function head(req, res) {
 	api.thread.get(req.params.file,{time:req.params.time,id:req.params.id,head:true}).then(function(rows){
 		for(var i=0; i<rows.length; i++){

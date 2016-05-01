@@ -2,6 +2,7 @@
 
 const api = require('./api2');
 const RSS = require('rss');
+const tohtml = require('./tohtml').t;
 
 var tags =["a","b","c"];
 function index(req, res) {
@@ -24,7 +25,8 @@ function thread(req, res) {
         const file = row.file;
         res.setHeader('Last-Modified', new Date(row.stamp).toUTCString());
         const offset = Math.max(row.records - 75, 0);//limit:10,offset:offset
-        api.thread.convert(file, {offset:offset,limit:75,html:true}).then(function (rows) {
+        api.thread.convert(file, {offset:offset,limit:75}).then(function (rows) {
+                rows.each(function(t) {t.body=tohtml(t.body);});
                 res.renderX('bbs', { title: title, messages: rows, file: file });
             });
     }).catch(function () { res.sendStatus(404); });
@@ -42,7 +44,8 @@ function rss(req,res){
     const rss = new RSS(api.config.feed);
     const recent = JSON.parse(JSON.stringify(api.recent)).reverse();
     for(var i=0;i<recent.length;i++){
-        var body=api.conv(recent[i].file,true)(recent[i]);
+        var body=api.conv(recent[i].file)(recent[i]);
+        body.body=tohtml(body.body);
         var x = recent[i];
         rss.item({
             url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
