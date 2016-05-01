@@ -68,13 +68,11 @@ function readNode(node,t){
     if(!node)return;
 	api.threads.get({}).then(function(rows){
         t = t||api.config.range.node;
-        var done =[];
 		readLine(nodeUrl(node,"recent","",t),function(body){
 			const x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
-				if(rows[i]&&rows[i].file==x[2]){
-                    if(done.indexOf(x[2])!=-1)return;
-                    done.push(x[2]);
+				if(rows[i].file==x[2]){
+					rows.splice(i,1);
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
 					return;
 				}
@@ -111,6 +109,7 @@ function get(url){
 }
 function readLine(url,callback,done){
 	return get(url).then(function(body){
+		if(!callback)return;
 		const x = body.split(/[\r\n]+/);
 		for(var i=0;i<x.length;i++){if(x[i])callback(x[i]);}
         if(done)done();
@@ -179,6 +178,6 @@ api.update.on("update",function(file,stamp,id){
 	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
 	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+":"+api.port+"+server.cgi";
     for(var n of api.config.friends.concat(nodes)){
-        get(nodeUrl(n,"update")+s);
+        readLine(nodeUrl(n,"update")+s);
      }
 });

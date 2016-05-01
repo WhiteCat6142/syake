@@ -26,7 +26,7 @@ function thread(req, res) {
         res.setHeader('Last-Modified', new Date(row.stamp).toUTCString());
         const offset = Math.max(row.records - 75, 0);//limit:10,offset:offset
         api.thread.convert(file, {offset:offset,limit:75}).then(function (rows) {
-                rows.each(function(t) {t.body=tohtml(t.body);});
+                rows.forEach(function(t) {t.body=tohtml(t.body);});
                 res.renderX('bbs', { title: title, messages: rows, file: file });
             });
     }).catch(function () { res.sendStatus(404); });
