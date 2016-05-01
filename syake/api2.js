@@ -156,15 +156,15 @@ exports.post = function (file, name, mail, body, time, subject) {
 const aday=60*60*24;
 function add(file,stamp,id,content){
     knex.transaction(function(trx) {
-        return trx.select("stamp","id").from(file).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id)
-        .then(function(rows){
+        return co(function*(){
+            var rows = yield trx.select("stamp","id").from(file).whereBetween("stamp",[stamp-aday,stamp+aday]).andWhere("id",id);
             if (rows.length > 0) {
                 if(stamp!==rows[0].stamp)console.log("duplicate post!");
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
             console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
-            return Promise.all([
+            yield Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(file).insert({stamp:stamp,id:id,content:content})
             ]);
