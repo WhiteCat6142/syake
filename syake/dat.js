@@ -68,7 +68,7 @@ function read(req,res){
         const id = req.params.id|0;
         if(!id)res.redirect("/thread.cgi/"+title);
         else{
-            api.thread.get(row.file,{sort:true}).then(function(rows){
+            api.thread.get(row.file,{sort:true,offset:id+1,limit:1,head:true}).then(function(rows){
                 res.redirect("/thread.cgi/"+title+"/"+rows[id-1].id);
             });
         }

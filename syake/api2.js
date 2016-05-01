@@ -6,12 +6,9 @@ pg.defaults.ssl = true;
 const crypto = require('crypto');
 const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
-//const request = require('request-lite');
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
-const tohtml = require('./tohtml').t;
-
 
 exports.recent=[];
 
@@ -34,30 +31,29 @@ const knex = require('knex')({
 var spamt=au.read("file/spam.txt","txt");
 
 knex.schema.hasTable('threads').then(function (exists) {
-    if (!exists) {
-        knex.schema.createTable("threads", function (table) {
-            table.increments("tid").primary();
-            table.integer("stamp").notNullable().index();
-            table.integer("records").notNullable();
-            table.string("title").unique().notNullable();
-            table.integer("dat").unique().notNullable();
-            table.string("file").unique().notNullable();
-            table.integer("laststamp");
-            table.string("lastid", 32);
-        }).then();
+    if (exists) return;
+    knex.schema.createTable("threads", function (table) {
+        table.increments("tid").primary();
+        table.integer("stamp").notNullable().index();
+        table.integer("records").notNullable();
+        table.string("title").unique().notNullable();
+        table.integer("dat").unique().notNullable();
+        table.string("file").unique().notNullable();
+        table.integer("laststamp");
+        table.string("lastid", 32);
+    }).then();
 
-        knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
-            knex.raw("CREATE unique index spamindex on spam(id);").then();
-        });
-        knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
-            knex.raw("CREATE unique index tagindex on tag(tag);").then();
-        });
-        knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
-            knex.raw("CREATE index tiindex on ttt(id);").then();
-            knex.raw("CREATE index taindex on ttt(tag);").then();
-        });
-        if (exports.config.image) fs.mkdir("./cache");
-    }
+    knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
+        knex.raw("CREATE unique index spamindex on spam(id);").then();
+    });
+    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
+        knex.raw("CREATE unique index tagindex on tag(tag);").then();
+    });
+    knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
+        knex.raw("CREATE index tiindex on ttt(id);").then();
+        knex.raw("CREATE index taindex on ttt(tag);").then();
+    });
+    if (exports.config.image) fs.mkdir("./cache");
 });
 
 exports.threads = {
@@ -90,9 +86,9 @@ exports.threads = {
                   yield trx.raw("CREATE index "+ff(file,55)+"_sindex on "+ff(file)+"(stamp);");
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
-                  } catch (e) {console.log(e);}
-              });
+              } catch (e) { console.log(e); }
           });
+      });
 	},
 	info:function(option){
         var s = knex.select("stamp","records","title","file","dat").from("threads");
@@ -131,8 +127,7 @@ exports.thread = {
             const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
             const name = md5 + "." + suffix;
             body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
-            console.log(name);
-            fs.writeFile("./cache/" + file + "/" + name, data, function (err) { if (err) console.log(err); });
+            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (err) console.log(err);console.log(name);});
         }
         add(file,stamp|0,id,body);
         }catch(e){
@@ -143,7 +138,7 @@ exports.thread = {
 	},
     convert:function(file,option) {
         return exports.thread.get(file,option).then(function(rows) {
-            return rows.map(conv(file,option.html));
+            return rows.map(conv(file));
         });
     }
 };
@@ -157,12 +152,12 @@ exports.spam=function(id){
 
 exports.post = function (file, name, mail, body, time, subject) {
     //if(subject)exports.threads.create(subject);
- var s = "";
- if(mail)s+="mail:"+escape(mail)+"<>";
- if(name)s+="name:"+escape(name)+"<>";
- s+="body:"+escape(body).replace(/\r\n|\r|\n/g,"<br>");
- exports.threads.info(file).then(function(row){
-   exports.thread.post(row.file,time||now(),null,s);
+    exports.threads.info(file).then(function (row) {
+        var s = "";
+        if (mail) s += "mail:" + escape(mail) + "<>";
+        if (name) s += "name:" + escape(name) + "<>";
+        s += "body:" + escape(body).replace(/\r\n|\r|\n/g, "<br>");
+        exports.thread.post(row.file, time || now(), null, s);
  });  
 };
 
@@ -177,6 +172,7 @@ function add(file,stamp,id,content){
                 return;
             }
             exports.update.emit('update', file, stamp, id, content);
+            console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
             yield Promise.all([
                 trx("threads").where("file",file).update({stamp:now(),laststamp:stamp,lastid:id,records:trx.raw("records + 1")}),
                 trx(ff(file)).insert({stamp:stamp,id:id,content:content})
@@ -186,7 +182,6 @@ function add(file,stamp,id,content){
 }
 
 exports.update.on("update",function(file,stamp,id,content){
-    console.log("update:"+file+" "+stamp+" "+id+" "+content.substring(0,16));
     exports.recent.push({
         title:exports.getTitle(file),
         file:file,
@@ -194,15 +189,12 @@ exports.update.on("update",function(file,stamp,id,content){
         id:id,
         content:content
     });
-    cleanRecent();
-});
-function cleanRecent(){
     const list = exports.recent;
     const t = now()-24*60*60*7;
     while(list.length>0&&list[0].stamp<t){
         list.shift();
     }
-}
+});
 
 exports.addDate = function(rows){
 	var time = "";
@@ -212,7 +204,7 @@ exports.addDate = function(rows){
 	}
 	return rows;
 };
-function conv(file,html){
+function conv(file){
     return function(row) {
     	var time = new Date(row.stamp*1000).toString();
 		time = time.substring(0,time.lastIndexOf(" GMT"));
@@ -224,28 +216,10 @@ function conv(file,html){
 		}
         r.body=r.body||"";
         if(r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
-        if(html)r.body=tohtml(r.body);
         return r;
     };
 }
 exports.conv=conv;
-
-
-exports.attach = function (file) {
-    return function (rows) {
-        if(!exports.config.image)return rows;
-        return co(function* () {
-            for (var i = 0; i < rows.length; i++) {
-                var s = rows[i].content;
-                if (s.indexOf("attach:") === -1) continue;
-                var j = s.match(/attach:([^(<>)]*)/);
-                var buf = yield co.wrap(fs.readFile)("./cache/" + file + "/" + j[1]);
-                rows[i].content = s.replace(/attach:([^(<>)]*)/, "attach:" + buf.toString("base64"));
-            }
-            return rows;
-        });
-    };
-};
 
 exports.notice=function(file,node){
     const unkownThreads = exports.unkownThreads;
@@ -257,15 +231,9 @@ exports.notice=function(file,node){
     exports.update.emit("notice",file,title,node);
 };
 
-function encode(s){
-    return new Buffer(s).toString("hex").toUpperCase();
-}
-function threadFile(title){return "thread_"+encode(title);};
+function threadFile(title){return "thread_"+new Buffer(title).toString("hex").toUpperCase();};
 
-function decode(s){
-    return new Buffer(s.toLowerCase(),"hex").toString();
-}
-exports.getTitle = function(file){return decode(file.substring("thread_".length));};
+exports.getTitle = function(file){return new Buffer(file.substring("thread_".length).toLowerCase(),"hex").toString();};
 
 function now(){return Math.round(Date.now()/1000);}
 

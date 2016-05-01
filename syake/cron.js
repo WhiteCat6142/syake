@@ -8,25 +8,8 @@ const Url = require('url');
 const nodes = api.config.nodes;
 exports.nodes=nodes;
 
-if(api.config.update){
-api.update.on("update",function(file,stamp,id){
-	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
-	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+":"+api.port+"+server.cgi";
-    for(var n of api.config.friends){
-        get(nodeUrl(n,"update")+s);
-     }
-});
-for(var n of api.config.nodes){
-	readLine(nodeUrl(n,"node"),function(node) {
-		api.config.friends.push(node);
-		api.config.join.push(node);
-		readLine(nodeUrl(node,"join")+"/"+host+"+server.cgi");
-	});
-}
-}
-
 function update(file,stamp,id,node){
-    return api.spam(id)
+    api.spam(id)
 	.then(function(){return api.thread.get(file,{time:stamp,id:id,head:true});})
 	.then(function(rows){
 		if(rows.length!=0)return;
@@ -35,7 +18,7 @@ function update(file,stamp,id,node){
 			const x = body.match(/(\d+)<>(.{32})<>(.*)/);
 			if(x&&stamp==x[1]&&id==x[2])api.thread.post(file,stamp|0,id,x[3]);
 		});
-    });
+    }).catch(function(){});
 }
 function readAll(node,file){
     api.threads.create(api.getTitle(file),function() {
@@ -76,11 +59,7 @@ function readHead(node,file){
             //limit new<=30*/
             for(var i=0;i<next.length;i++){
                 var x = next[i].split("<>");
-                api.spam(x[1]).then(function() {
-					update(file,x[0],x[1],node);
-				},function() {
-					
-				});
+				update(file,x[0],x[1],node);
             }
         });
 	});
@@ -126,7 +105,7 @@ function get(url){
 		});
 		request.on('error', function(e){reject(e);});
 		request.setHeader("accept-encoding","gzip");
-		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.40.0)');
+		request.setHeader('user-agent','shinGETsu/0.7 (Syake/0.54.0)');
 		request.end();
 	});
 }
@@ -137,7 +116,7 @@ function readLine(url,callback,done){
         if(done)done();
 	}).catch(function(e){
         if(e.code=="ECONNREFUSED"||e.code=="ETIMEDOUT")return;
-		console.log(e.code);
+		console.log(e.code||e);
 		console.log(url);
 		if(api.config.del){
 		var node = url.match(/http:\/\/(.*?\/.*?)\/.*/)[1];
@@ -177,12 +156,29 @@ setInterval(function(){
         readNode(nodes[numt++]);
 },api.config.range.interval*1000);
 
-for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
+if(api.config.update){
+for(var n of api.config.nodes){
+	readLine(nodeUrl(n,"node"),function(node) {
+		api.config.friends.push(node);
+		readLine(nodeUrl(node,"join")+"/"+api.host+":"+api.port+"+server.cgi");
+	});
+}
+}
+
+for(var n of api.config.friends)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
 setInterval(function(){
-	for(var n of api.config.join)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
+	for(var n of api.config.friends)readLine(nodeUrl(n,"join")+"/"+api.host+":"+api.port+"+server.cgi");
 },15*60*1000);
 
 if(api.config.range.first){
     const t = api.config.range.first;
     for(var i=0; i<nodes.length; i++){readNode(nodes[i],t);}
 }
+
+api.update.on("update",function(file,stamp,id){
+	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
+	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+":"+api.port+"+server.cgi";
+    for(var n of api.config.friends.concat(nodes)){
+        get(nodeUrl(n,"update")+s);
+     }
+});
