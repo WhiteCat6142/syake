@@ -58,7 +58,8 @@ function dat(req,res){
 const msg = en("<HTML><!-- 2ch_X:true --><HEAD><TITLE>書きこみました</TITLE></HEAD><BODY>書きこみました</BODY></HTML>");
 function post(req, res){
  const b =req.body;
- api.post({dat:b.key},de(b.FROM),de(b.mail),de(b.MESSAGE),parseInt(b.time,10))
+ var msg=b.MESSAGE;
+ api.post({dat:b.key},de(b.FROM),de(b.mail),de(),parseInt(b.time,10))
  res.end(msg);
 }
 
