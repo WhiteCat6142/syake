@@ -3,7 +3,6 @@
 const crypto = require('crypto');
 const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
-//const request = require('request-lite');
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
@@ -24,30 +23,29 @@ const knex = require('knex')(exports.config.db);
 var spamt=au.read("file/spam.txt","txt");
 
 knex.schema.hasTable('threads').then(function (exists) {
-    if (!exists) {
-        knex.schema.createTable("threads", function (table) {
-            table.increments("tid").primary();
-            table.integer("stamp").notNullable().index();
-            table.integer("records").notNullable();
-            table.string("title").unique().notNullable();
-            table.integer("dat").unique().notNullable();
-            table.string("file").unique().notNullable();
-            table.integer("laststamp");
-            table.string("lastid", 32);
-        }).then();
+    if (exists) return;
+    knex.schema.createTable("threads", function (table) {
+        table.increments("tid").primary();
+        table.integer("stamp").notNullable().index();
+        table.integer("records").notNullable();
+        table.string("title").unique().notNullable();
+        table.integer("dat").unique().notNullable();
+        table.string("file").unique().notNullable();
+        table.integer("laststamp");
+        table.string("lastid", 32);
+    }).then();
 
-        knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
-            knex.raw("CREATE unique index spamindex on spam(id);").then();
-        });
-        knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
-            knex.raw("CREATE unique index tagindex on tag(tag);").then();
-        });
-        knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
-            knex.raw("CREATE index tiindex on ttt(id);").then();
-            knex.raw("CREATE index taindex on ttt(tag);").then();
-        });
-        if (exports.config.image) fs.mkdir("./cache");
-    }
+    knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
+        knex.raw("CREATE unique index spamindex on spam(id);").then();
+    });
+    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
+        knex.raw("CREATE unique index tagindex on tag(tag);").then();
+    });
+    knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
+        knex.raw("CREATE index tiindex on ttt(id);").then();
+        knex.raw("CREATE index taindex on ttt(tag);").then();
+    });
+    if (exports.config.image) fs.mkdir("./cache");
 });
 
 exports.threads = {
@@ -72,17 +70,17 @@ exports.threads = {
       for(var i=0;i<l.length;i++){
           if(l[i].file==file){l.splice(i,1);}
       }
-          knex.transaction(function(trx) {
-              return co(function*(){
-                  try {
+      knex.transaction(function (trx) {
+          return co(function* () {
+              try {
                   yield trx.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
-                  yield trx("threads").insert({stamp:t,title:title,dat:t,file:file});
-                  yield trx.raw("CREATE index "+file+"_sindex on "+file+"(stamp);");
-                  if(exports.config.image)fs.mkdir("./cache/" + file, callback);
+                  yield trx("threads").insert({ stamp: t, title: title, dat: t, file: file });
+                  yield trx.raw("CREATE index " + file + "_sindex on " + file + "(stamp);");
+                  if (exports.config.image) fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
-                  } catch (e) {console.log(e);}
-              });
+              } catch (e) { console.log(e); }
           });
+      });
 	},
 	info:function(option){
         var s = knex.select("stamp","records","title","file","dat").from("threads");
@@ -121,8 +119,7 @@ exports.thread = {
             const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
             const name = md5 + "." + suffix;
             body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
-            console.log(name);
-            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (err) console.log(err); });
+            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (err) console.log(err);console.log(name);});
         }
         add(file,stamp|0,id,body);
         }catch(e){
@@ -147,12 +144,12 @@ exports.spam=function(id){
 
 exports.post = function (file, name, mail, body, time, subject) {
     //if(subject)exports.threads.create(subject);
- var s = "";
- if(mail)s+="mail:"+escape(mail)+"<>";
- if(name)s+="name:"+escape(name)+"<>";
- s+="body:"+escape(body).replace(/\r\n|\r|\n/g,"<br>");
- exports.threads.info(file).then(function(row){
-   exports.thread.post(row.file,time||now(),null,s);
+    exports.threads.info(file).then(function (row) {
+        var s = "";
+        if (mail) s += "mail:" + escape(mail) + "<>";
+        if (name) s += "name:" + escape(name) + "<>";
+        s += "body:" + escape(body).replace(/\r\n|\r|\n/g, "<br>");
+        exports.thread.post(row.file, time || now(), null, s);
  });  
 };
 
@@ -183,15 +180,12 @@ exports.update.on("update",function(file,stamp,id,content){
         id:id,
         content:content
     });
-    cleanRecent();
-});
-function cleanRecent(){
     const list = exports.recent;
     const t = now()-24*60*60*7;
     while(list.length>0&&list[0].stamp<t){
         list.shift();
     }
-}
+});
 
 exports.addDate = function(rows){
 	var time = "";

@@ -3,13 +3,16 @@
 const api = require('./api2');
 const nodeManeger = require('./cron');
 const co = require('co');
+const fs = require('fs');
+const read = co.wrap(fs.readFile);
 var nodes = nodeManeger.nodes;
 
 function ping(req, res) {
 	res.end("PONG\n"+req.ip);
 }
 function node(req, res) {
-	res.end(nodes[Math.floor(Math.random()*nodes.length)]);
+	var x = nodes.concat(api.config.friends);
+	res.end(x[Math.floor(Math.random()*x.length)]);
 }
 function join(req, res) {
  const node = req.node;
@@ -41,14 +44,14 @@ function get(req, res) {
 	});
 }
 function attach(file) {
+	if(!api.config.image)return function (rows) {return rows;}
     return function (rows) {
-        if(!api.config.image)return rows;
         return co(function* () {
             for (var i = 0; i < rows.length; i++) {
                 var s = rows[i].content;
                 if (s.indexOf("attach:") === -1) continue;
                 var j = s.match(/attach:([^(<>)]*)/);
-                var buf = yield co.wrap(fs.readFile)("./cache/" + file + "/" + j[1]);
+                var buf = yield read("./cache/" + file + "/" + j[1]);
                 rows[i].content = s.replace(/attach:([^(<>)]*)/, "attach:" + buf.toString("base64"));
             }
             return rows;
@@ -67,7 +70,7 @@ function head(req, res) {
 }
 function update(req, res) {
 	res.end("OK");
-	nodeManeger.update(req.params.file,req.params.stamp,req.params.id,req.node).catch(function(e){});
+	nodeManeger.update(req.params.file,req.params.stamp,req.params.id,req.node);
 }
 function recent(req, res) {
 	api.threads.get({time:req.params.time}).then(function(rows){
