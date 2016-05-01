@@ -72,8 +72,8 @@ function readNode(node,t){
 			const x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i].file==x[2]){
-					rows.splice(i,1);
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
+					rows.splice(i,1);
 					return;
 				}
 			}
