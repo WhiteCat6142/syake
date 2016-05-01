@@ -24,7 +24,7 @@ function bye(req, res) {
  //if(!node.startsWith(req.ip))throw "ip doesn't match the node";
  const n= api.config.friends;
  const i=n.indexOf(node);
- if(i!=-1)delete n[i];
+ if(i!=-1)n.splice(i,1);
  res.end("BYEBYE");
 }
 function have(req, res) {
