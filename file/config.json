@@ -3,10 +3,12 @@
     "user":"jhh:hbgjkbhjjjnnlkn",
     "nodes":[
         "node.shingetsu.info:8000/server.cgi",
-        "ygg.io/server",
+        "ygg.ch/server",
         "rep4649.ddo.jp:8000/server.cgi"],
     "friends":["160.13.150.53:8000/server.cgi"],
     "update":true,
+    "joining":18,
+    "del":true,
     "range":{
         "node":2,
         "head":4,

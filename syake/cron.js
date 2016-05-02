@@ -150,13 +150,21 @@ function join(node) {
 function addFriend(node) {
 	var f = api.config.friends;
 	if(f.indexOf(node)!=-1)return;
+	console.log("join "+node);
 	f.push(node);
 	join(node);
 }
 exports.addFriend=addFriend;
 
+exports.byebye=function() {
+	for(var n of api.config.friends){
+		readLine(nodeUrl(n,"bye")+"/"+api.host+":"+api.port+"+server.cgi");
+	}
+	api.config.friends=[];
+};
+
 function nodeUrl(node,m,file,t){
-	if((m!="get")&&(m!="head"))console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
+	if(m=="recent")console.log(m+" "+node+((file)?" "+file.substr(0,32):""));
     const s = ((file)?"/"+file:"")+((t)?"/"+time(t):"");
 	return "http://"+node+"/"+m+s;
 }
@@ -169,8 +177,13 @@ setInterval(function(){
 
 for(var n of api.config.friends)join(n);
 setInterval(function(){
-	for(var n of api.config.friends)join(n);
-},15*60*1000);
+	console.log("rejoin");
+	var list=api.config.friends;
+	var x=8;
+	for(var i=0;i<list.length;i++){
+		if((list.length<8)||(Math.random()<x/10)){join(list[i]);x--;}
+	}
+},api.config.joining*60*1000);
 
 if(api.config.update){
 for(var n of api.config.nodes){
@@ -186,6 +199,7 @@ if(api.config.range.first){
 api.update.on("update",function(file,stamp,id){
 	if(stamp<Math.round(Date.now()/1000)-24*60*60)return;
 	const s="/"+file+"/"+stamp+"/"+id+"/"+api.host+":"+api.port+"+server.cgi";
+	console.log("update:"+s);
     for(var n of api.config.friends.concat(nodes)){
         readLine(nodeUrl(n,"update")+s);
      }
