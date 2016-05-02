@@ -8,6 +8,7 @@
         "","","",""],
     "friends":[],
     "update":false,
+    "joining":18,
     "range":{
         "node":2,
         "head":4,

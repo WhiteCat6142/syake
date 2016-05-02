@@ -6,8 +6,8 @@ block content
    each node in nodes
     li
      |!{node}
-     a(href='/admin.cgi/node/del/'+node) [x]
-  form(action='/admin.cgi/node' method='post')
+     a(href='./node/del/'+node) [x]
+  form(action='./node' method='post')
    input(name="node" type="text")
    button(type="submit") Add
   h3 friends
@@ -15,13 +15,14 @@ block content
    each node in friends
     li
      |!{node}
-  form(action='/admin.cgi/friend' method='post')
+  form(action='./friend' method='post')
    input(name="node" type="text")
    button(type="submit") Add
+  a(href='./byebye')
   h3 threads
   ul
    each thread in x
     li
-     a(href="/admin.cgi/new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
+     a(href="./new/"+thread.node+"/"+thread.file) #{thread.title} (#{thread.node})
 block rside
-  a(href="/admin.cgi/refresh") refresh
+  a(href="./refresh") refresh

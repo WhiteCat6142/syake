@@ -28,8 +28,11 @@ app.post('/node',function(req,res){
     res.redirect("back");
 });
 app.post('/friend',function(req,res){
-    const node = req.body.node;
-    nodeManeger.addFriend(node);
+    nodeManeger.addFriend(req.body.node);
+    res.redirect("back");
+});
+app.get('/byebye',function(req,res){
+    nodeManeger.byebye();
     res.redirect("back");
 });
 app.get('/node/del/:node',function(req,res){
