@@ -18,7 +18,9 @@ app.use("/file",express.static('cache',{maxAge:86400000*31,etag:false,lastModifi
 app.use(compression({threshold:0}));
 app.use("/",express.static('www',{maxAge:86400000*7}));
 
-app.use(logger('dev'));
+app.use(logger('dev'),{
+  skip: function (req, res) { return req.path.startsWith("/server.cgi"); }
+});
 
 app.use(cache.get);
 app.use(cache.put);
