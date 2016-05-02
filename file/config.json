@@ -6,6 +6,7 @@
         "ygg.ch/server",
         "rep4649.ddo.jp:8000/server.cgi"],
     "friends":["160.13.150.53:8000/server.cgi"],
+    "deny":[],
     "update":true,
     "joining":18,
     "del":true,

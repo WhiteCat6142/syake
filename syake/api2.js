@@ -97,6 +97,7 @@ exports.threads = {
 		else if(option.dat)s=s.where("dat",option.dat);
 		return s.then(function(rows){
 			if(rows.length==1)return Promise.resolve(rows[0]);
+            console.log("wanted:"+exports.getTitle(option.file));
 			return Promise.reject();
 		});
 	}
