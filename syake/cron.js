@@ -149,7 +149,7 @@ function join(node) {
 
 function addFriend(node) {
 	var f = api.config.friends;
-	if(f.indexOf(node)!=-1)return;
+	if(api.config.deny.concat(f).indexOf(node)!=-1)return;
 	console.log("join "+node);
 	f.push(node);
 	join(node);
