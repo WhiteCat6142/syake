@@ -119,9 +119,9 @@ function readLine(url,callback,done){
 		console.log(url);
 		if(api.config.del){
 		var node = url.match(/http:\/\/(.*?\/.*?)\/.*/)[1];
-		var i= nodes.indexOf(node);
+		var i= api.config.friends.indexOf(node);
 		console.log("bye "+node+" "+i);
-        delete nodes[i];
+        api.config.friends.splice(i,1);
 		}
     });
 }
