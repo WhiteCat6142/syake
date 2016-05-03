@@ -72,7 +72,7 @@ function update(req, res) {
 	res.end("OK");
 	api.threads.info({file:req.params.file}).then(function(row){
 		nodeManeger.update(req.params.file,req.params.stamp,req.params.id,req.node);
-	});
+	},function() {});
 }
 function recent(req, res) {
 	api.threads.get({time:req.params.time}).then(function(rows){
