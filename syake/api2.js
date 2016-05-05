@@ -6,6 +6,7 @@ const EventEmitter = require('events').EventEmitter;
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
+const check = require('./apollo').check;
 
 exports.recent=[];
 
@@ -112,6 +113,7 @@ exports.thread = {
 		const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
 		if(id){if(md5!=id){console.log(id);throw "Abnormal MD5";}}
         else { id = md5; }
+        check(file,stamp,id,conv()({content:body,id:id}));
         if (body.indexOf("attach:") != -1) {
             if (!exports.config.image) { throw "no file mode"; }
             const suffix = body.match(/suffix:([^(<>)]*)/)[1];
@@ -198,8 +200,11 @@ exports.addDate = function(rows){
 };
 function conv(file){
     return function(row) {
-    	var time = new Date(row.stamp*1000).toString();
-		time = time.substring(0,time.lastIndexOf(" GMT"));
+        var time=undefined;
+        if (row.stamp) {
+            time = new Date(row.stamp * 1000).toString();
+            time = time.substring(0, time.lastIndexOf(" GMT"));
+        }
 		const r={date:time,id:row.id.substr(0,8)};
 		const content=row.content.split("<>");		
 		for(var j of content){
@@ -207,7 +212,7 @@ function conv(file){
 			if(x)r[x[1]]=x[2];
 		}
         r.body=r.body||"";
-        if(r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
+        if(file&&r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
         return r;
     };
 }
