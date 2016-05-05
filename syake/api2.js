@@ -122,7 +122,7 @@ exports.thread = {
             const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
             const name = md5 + "." + suffix;
             body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
-            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (err) console.log(err);console.log(name);});
+            fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (!err)console.log(name);});
         }
         add(file,stamp|0,id,body);
         }catch(e){

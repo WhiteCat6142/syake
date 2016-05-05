@@ -3,6 +3,7 @@
 const api = require('./api2');
 const iconv = require('iconv-lite');
 const co = require('co');
+const fs = require('fs');
 
 function subject(req,res){
     api.threads.get({sort:true}).then(function(rows){
@@ -56,11 +57,59 @@ function dat(req,res){
     });
 }
 const msg = en("<HTML><!-- 2ch_X:true --><HEAD><TITLE>書きこみました</TITLE></HEAD><BODY>書きこみました</BODY></HTML>");
+const emsg = en("<HTML><!-- 2ch_X:error --><HEAD><TITLE>ＥＲＲＯＲ</TITLE></HEAD><BODY>書きこめませんでした</BODY></HTML>");
 function post(req, res){
  const b =req.body;
- var msg=b.MESSAGE;
- api.post({dat:b.key},de(b.FROM),de(b.mail),de(),parseInt(b.time,10))
- res.end(msg);
+ var body=de(b.MESSAGE);
+ var b1 = body.match(/>>[\d-,]+/g);
+ if (b1) {
+     api.threads.info({dat:b.key})
+         .then(function (row) {
+             return api.thread.get(row.file, { sort: true, head: true });
+         })
+         .then(function (rows) {
+             for (var ele of b1) {
+                 if (ele.indexOf(",") || ele.indexOf("-")) {
+                     var e=trans(ele).map(function(i){if(i)return ">>" + rows[i - 1].id.substr(0, 8);return ">>0"}).join(" ");
+                     body = body.replace(ele, e);
+                 } else {
+                     var i = ele.substr(2) | 0;
+                     if (i == 0) continue;
+                     body = body.replace(ele, ">>" + rows[i - 1].id.substr(0, 8));
+                 }
+             }
+             return body;
+            })
+            .then(function(body) {
+                api.post({dat:b.key},de(b.FROM),de(b.mail),body,parseInt(b.time,10));
+                res.end(msg);
+            }).catch(function(){
+                res.end(emsg);
+            });
+ } else {
+      api.post({dat:b.key},de(b.FROM),de(b.mail),body,parseInt(b.time,10));
+      res.end(msg);
+ }
+}
+function trans(s) {
+    s=s.substr(2);
+    var r=[];
+    var b1=s.split(',');
+    for(var e of b1){
+        var b2=e.split('-');
+        if(b2[1]){
+            var x=b2[0]|0,y=b2[1]|0;
+            if(x>y){
+                var tmp=x;
+                x=y;
+                y=tmp;
+            }
+            for(var i=x;i<=y;i++)r.push(i);
+        }else{
+            r.push(e|0);
+        }
+    }
+    return r;
 }
 
 function read(req,res){
@@ -76,10 +125,26 @@ function read(req,res){
     });
 }
 
+function head(req,res) {
+    fs.readFile("www/motd.txt","utf-8",function(err,data){
+        res.endX(en(data.replace(/[\n\r]+/g,"<br>")));
+    });
+}
+const settingT= en("BBS_TITLE=新月\n\
+BBS_NONAME_NAME=新月名無しさん");
+function setting(req,res) {
+    res.endX(settingT);
+}
+
 function de(str){
  var output = "";
+ var o=undefined;
  for(var i=0; i<str.length; ++i){
-  if(str.charAt(i)!="%")output+=str.charCodeAt(i).toString(16);
+  if(str.charAt(i)!="%"){
+      o=str.charCodeAt(i).toString(16);
+      if(o.length%2==1)o="0"+o;
+      output+=o;
+    }
   else output+=str.charAt(++i)+str.charAt(++i);
  }
     return iconv.decode(new Buffer(output,"hex"),"Shift_JIS");
@@ -98,4 +163,6 @@ app.get('/2ch/dat/:dat',dat);
 app.post('/test/bbs.cgi',post);
 app.get('/test/read.cgi/2ch/:dat',read);
 app.get('/test/read.cgi/2ch/:dat/:id',read);
+app.get('/2ch/head.txt',head);
+app.get('/2ch/SETTING.TXT',setting);
 };
