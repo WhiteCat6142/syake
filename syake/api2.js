@@ -8,8 +8,6 @@ const au = require("../autosaver");
 const co = require('co');
 const check = require('./apollo').check;
 
-exports.recent=[];
-
 exports.update=new EventEmitter();
 
 exports.unkownThreads=[];
@@ -55,10 +53,10 @@ exports.threads = {
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.sort)s=s.orderBy("stamp","desc");
 		if(option.limit)s=s.limit(option.limit);
-        /*if(option.tag){
+        if(option.tag){
             o="*,group_concat(tag) as tags";
             s+" join (select tag.tag,ttt.id from ttt join tag on ttt.tag = tag.id) on tid=id group by tid;";
-        }*/
+        }
         s=s.catch(function(){return [];});
         if(option.addDate)return s.then(exports.addDate);
 		return s;
@@ -135,7 +133,25 @@ exports.thread = {
         return exports.thread.get(file,option).then(function(rows) {
             return rows.map(conv(file));
         });
+    },
+    addTag:function(file,tag) {
+        knex.transaction(function(trx) {
+            return Promise.all([
+                trx.select("id").from("tag").where("tag",tag),
+                trx.select("tid").from("threads").where("file",file)
+            ])
+            .then(function(x){
+                if(x[0].length==0)return trx("tag").insert({tag:tag}).returning("id").then(function(row){
+                    return trx("ttt").insert({id:x[1][0].tid,tag:row[0]});
+                });
+                else return trx("ttt").insert({id:x[1][0].tid,tag:x[0][0].id});
+            })
+        });
     }
+};
+
+exports.tag=function(){
+    return knex.select().from("tag");
 };
 
 exports.spam=function(id){
@@ -174,21 +190,6 @@ function add(file,stamp,id,content){
         });
     });
 }
-
-exports.update.on("update",function(file,stamp,id,content){
-    exports.recent.push({
-        title:exports.getTitle(file),
-        file:file,
-        stamp:stamp,
-        id:id,
-        content:content
-    });
-    const list = exports.recent;
-    const t = now()-24*60*60*7;
-    while(list.length>0&&list[0].stamp<t){
-        list.shift();
-    }
-});
 
 exports.addDate = function(rows){
 	var time = "";

@@ -9,8 +9,8 @@ block append scripts
 block lside
      h1 タグ
      #tags
-       each tag in tags
-         a(href="/gateway.cgi/changes?tag="+tag) #{tag}
+       each t in tags
+         a(href="/gateway.cgi/changes?tag="+t.tag) #{t.tag}
 block content
      h1 スレッド
      ul(id="threads")
