@@ -19,6 +19,7 @@ block content
           .card-block
            a.card-title(href="/thread.cgi/"+thread.title) #{thread.title}
            .card-text #{thread.records}comments
+           |#{thread.tag}
      script(type="text/template",id="tmpl")
       |{{#ts}}
       .card

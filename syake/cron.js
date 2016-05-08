@@ -72,6 +72,12 @@ function readNode(node,t){
 			const x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i].file==x[2]){
+					if(x[3]){
+						var tag=(rows[i].tag||"").split(",");
+						for(var ct of x[3].substr(4).split(" ")){
+							if(tag.indexOf(ct)==-1)api.thread.addTag(x[2],ct);
+						}
+					}
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
 					rows.splice(i,1);
 					return;

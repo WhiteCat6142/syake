@@ -79,6 +79,7 @@ function recent(req, res) {
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].laststamp+"<>"+rows[i].lastid+"<>"+rows[i].file);
+			if(rows[i].tag)res.write("<>tag:"+rows[i].tag.replace(/,/g," "));
 		}
 		res.end();
 	});

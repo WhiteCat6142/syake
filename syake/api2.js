@@ -26,7 +26,7 @@ knex.schema.hasTable('threads').then(function (exists) {
     knex.schema.createTable("threads", function (table) {
         table.increments("tid").primary();
         table.integer("stamp").notNullable().index();
-        table.integer("records").notNullable();
+        table.integer("records").notNullable().defaultTo(0);
         table.string("title").unique().notNullable();
         table.integer("dat").unique().notNullable();
         table.string("file").unique().notNullable();
@@ -35,28 +35,22 @@ knex.schema.hasTable('threads').then(function (exists) {
     }).then();
 
     knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
-        knex.raw("CREATE unique index spamindex on spam(id);").then();
+        return knex.raw("CREATE unique index spamindex on spam(id);");
     });
-    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
-        knex.raw("CREATE unique index tagindex on tag(tag);").then();
-    });
-    knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
-        knex.raw("CREATE index tiindex on ttt(id);").then();
-        knex.raw("CREATE index taindex on ttt(tag);").then();
+    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL,tag TEXT NOT NULL,UNIQUE(id,tag));").then(function(){
+        knex.raw("CREATE index tiindex on tag(id);").then();
+        knex.raw("CREATE index ttindex on tag(tag);").then();
     });
     if (exports.config.image) fs.mkdir("./cache");
 });
 
 exports.threads = {
 	get:function(option){
-		var s=knex.select().from("threads");
+		var s=knex.select("*",knex.raw("group_concat(tag.tag) as tag")).from("threads");
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.sort)s=s.orderBy("stamp","desc");
 		if(option.limit)s=s.limit(option.limit);
-        if(option.tag){
-            o="*,group_concat(tag) as tags";
-            s+" join (select tag.tag,ttt.id from ttt join tag on ttt.tag = tag.id) on tid=id group by tid;";
-        }
+        s=s.leftJoin("tag","tid","id").groupBy("tid");
         s=s.catch(function(){return [];});
         if(option.addDate)return s.then(exports.addDate);
 		return s;
@@ -135,24 +129,13 @@ exports.thread = {
         });
     },
     addTag:function(file,tag) {
-        knex.transaction(function(trx) {
-            return Promise.all([
-                trx.select("id").from("tag").where("tag",tag),
-                trx.select("tid").from("threads").where("file",file)
-            ])
-            .then(function(x){
-                if(x[0].length==0)return trx("tag").insert({tag:tag}).returning("id").then(function(row){
-                    return trx("ttt").insert({id:x[1][0].tid,tag:row[0]});
-                });
-                else return trx("ttt").insert({id:x[1][0].tid,tag:x[0][0].id});
-            })
-        });
+        knex.select("tid").from("threads").where("file",file).then(function(rows){
+            return knex("tag").insert({id:rows[0].tid,tag:tag});
+        }).catch(function(){});
     }
 };
 
-exports.tag=function(){
-    return knex.select().from("tag");
-};
+exports.tag=function(){return knex("tag").distinct("tag").select();};
 
 exports.spam=function(id){
     return knex.select("id").from("spam").where("id",id).then(function(rows){
