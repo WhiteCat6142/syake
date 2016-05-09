@@ -4,7 +4,13 @@ const api = require('./api2');
 const nodeManeger = require('./cron');
 const co = require('co');
 const fs = require('fs');
-const read = co.wrap(fs.readFile);
+
+function read(path){
+	return new Promise(function(res,rej) {
+		fs.readFile(path,function(err,data){if(err)rej(err);else res(data);});
+	});
+}
+
 var nodes = nodeManeger.nodes;
 
 function ping(req, res) {
@@ -79,7 +85,7 @@ function recent(req, res) {
 		for(var i=0; i<rows.length; i++){
 			if(i>0)res.write("\n");
 			res.write(rows[i].laststamp+"<>"+rows[i].lastid+"<>"+rows[i].file);
-			if(rows[i].tag)res.write("<>tag:"+rows[i].tag.replace(/,/g," "));
+			if(rows[i].tag)res.write("<>tag:"+rows[i].tag.join(" "));
 		}
 		res.end();
 	});

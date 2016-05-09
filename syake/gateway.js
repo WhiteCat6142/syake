@@ -14,7 +14,7 @@ function index(req, res) {
  });
 }
 function changes(req, res) {
- api.threads.get({sort:true,tag:req.query.tag}).then(function(threads) {
+ api.threads.get({sort:true,tag:req.query.tag.split(" ")}).then(function(threads) {
      res.type("text/plain; charset=utf-8");
      res.endX(JSON.stringify(threads.map(function(t) {
          return {s:t.stamp,t:t.title,r:t.records};

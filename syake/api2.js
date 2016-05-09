@@ -50,8 +50,14 @@ exports.threads = {
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.sort)s=s.orderBy("stamp","desc");
 		if(option.limit)s=s.limit(option.limit);
+        if(option.tag)s=s.whereIn("tag",option.tag);
         s=s.leftJoin("tag","tid","id").groupBy("tid");
-        s=s.catch(function(){return [];});
+        s=s.then(function(rows){
+            for(var t of rows){
+                if(t.tag)t.tag=t.tag.split(",");
+            }
+            return rows;
+        },function(){return [];});
         if(option.addDate)return s.then(exports.addDate);
 		return s;
 	},
