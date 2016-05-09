@@ -3,7 +3,7 @@
     "user":"jhh:hbgjkbhjjjnnlkn",
     "nodes":[
         "node.shingetsu.info:8000/server.cgi",
-        "ygg.ch/server",
+        "ygg.ch:80/server",
         "rep4649.ddo.jp:8000/server.cgi"],
     "friends":["160.13.150.53:8000/server.cgi"],
     "deny":[],

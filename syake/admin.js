@@ -16,10 +16,12 @@ app.use(function(req, res, next){
 });
     
 app.get('/',function(req,res){
+    api.unkownThreads().then(function(un){
     res.render('admin',{
         nodes:nodeManeger.nodes.map(function(ele){return ele.replace(/\//g,"+")}),
-        x:api.unkownThreads,
+        x:un,
         friends:api.config.friends
+    });
     });
 });
 app.post('/node',function(req,res){
@@ -43,7 +45,7 @@ app.get('/node/del/:node',function(req,res){
 });
 app.get('/refresh',function(req,res){
     const a = nodeManeger.nodes;
-    for(var i=0; i<a.length; i++){nodeManeger.read(a[i]);}
+    for(var i=0; i<a.length; i++){nodeManeger.read(a[i],30);}
     cache.clear();
     res.redirect("back");
 });

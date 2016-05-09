@@ -11,11 +11,7 @@ const au = require("../autosaver");
 const co = require('co');
 const check = require('./apollo').check;
 
-exports.recent=[];
-
 exports.update=new EventEmitter();
-
-exports.unkownThreads=[];
 
 exports.port=80;
 exports.host="syake.herokuapp.com";
@@ -36,7 +32,7 @@ knex.schema.hasTable('threads').then(function (exists) {
     knex.schema.createTable("threads", function (table) {
         table.increments("tid").primary();
         table.integer("stamp").notNullable().index();
-        table.integer("records").notNullable();
+        table.integer("records").notNullable().defaultTo(0);
         table.string("title").unique().notNullable();
         table.integer("dat").unique().notNullable();
         table.string("file").unique().notNullable();
@@ -45,29 +41,35 @@ knex.schema.hasTable('threads').then(function (exists) {
     }).then();
 
     knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function () {
-        knex.raw("CREATE unique index spamindex on spam(id);").then();
+        return knex.raw("CREATE unique index spamindex on spam(id);");
     });
-    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL PRIMARY KEY,tag TEXT NOT NULL UNIQUE);").then(function () {
-        knex.raw("CREATE unique index tagindex on tag(tag);").then();
+    knex.raw("CREATE TABLE tag (id INTEGER NOT NULL,tag TEXT NOT NULL,UNIQUE(id,tag));").then(function(){
+        knex.raw("CREATE index tiindex on tag(id);").then();
+        knex.raw("CREATE index ttindex on tag(tag);").then();
     });
-    knex.raw("CREATE TABLE ttt (id INTEGER NOT NULL,tag INTEGER NOT NULL);").then(function () {
-        knex.raw("CREATE index tiindex on ttt(id);").then();
-        knex.raw("CREATE index taindex on ttt(tag);").then();
-    });
+    knex.schema.createTable("unknown", function (table) {
+        table.increments("tid").primary();
+        table.string("file").unique().notNullable();
+        table.string("title").unique().notNullable();
+        table.string("node").notNullable();
+    }).then();
     if (exports.config.image) fs.mkdir("./cache");
 });
 
 exports.threads = {
 	get:function(option){
-		var s=knex.select().from("threads");
+		var s=knex.select("*",knex.raw("group_concat(tag.tag) as tag")).from("threads");
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.sort)s=s.orderBy("stamp","desc");
 		if(option.limit)s=s.limit(option.limit);
-        /*if(option.tag){
-            o="*,group_concat(tag) as tags";
-            s+" join (select tag.tag,ttt.id from ttt join tag on ttt.tag = tag.id) on tid=id group by tid;";
-        }*/
-        s=s.catch(function(){return [];});
+        if(option.tag)s=s.whereIn("tag",option.tag);
+        s=s.leftJoin("tag","tid","id").groupBy("tid");
+        s=s.then(function(rows){
+            for(var t of rows){
+                if(t.tag)t.tag=t.tag.split(",");
+            }
+            return rows;
+        },function(){return [];});
         if(option.addDate)return s.then(exports.addDate);
 		return s;
 	},
@@ -75,16 +77,13 @@ exports.threads = {
       const t = now();
 	  const file = threadFile(title);
       console.log("newThread:" + t + " " + t + " " + file + " " + title);
-      const l=exports.unkownThreads;
-      for(var i=0;i<l.length;i++){
-          if(l[i].file==file){l.splice(i,1);}
-      }
           knex.transaction(function(trx) {
               return co(function*(){
                   try {
                   yield trx.raw("CREATE TABLE " + ff(file) + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield trx("threads").insert({stamp:t,title:title,dat:t,file:file});
                   yield trx.raw("CREATE index "+ff(file,55)+"_sindex on "+ff(file)+"(stamp);");
+                  yield trx("unknown").where("file",file).del();
                   if(exports.config.image)fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
               } catch (e) { console.log(e); }
@@ -99,6 +98,9 @@ exports.threads = {
 		return s.then(function(rows){
 			if(rows.length==1)return Promise.resolve(rows[0]);
             console.log("wanted:"+exports.getTitle(option.file));
+            knex.select("file").from("unknown").where("file",file).then(function(rows){
+                if(rows.length==0)exports.update.emit("wanted",option.file);
+            }).catch(function(){});
 			return Promise.reject();
 		});
 	}
@@ -143,8 +145,15 @@ exports.thread = {
         return exports.thread.get(file,option).then(function(rows) {
             return rows.map(conv(file));
         });
+    },
+    addTag:function(file,tag) {
+        knex.select("tid").from("threads").where("file",file).then(function(rows){
+            return knex("tag").insert({id:rows[0].tid,tag:tag});
+        }).catch(function(){});
     }
 };
+
+exports.tag=function(){return knex("tag").distinct("tag").select();};
 
 exports.spam=function(id){
     return knex.select("id").from("spam").where("id",id).then(function(rows){
@@ -184,21 +193,6 @@ function add(file,stamp,id,content){
     });
 }
 
-exports.update.on("update",function(file,stamp,id,content){
-    exports.recent.push({
-        title:exports.getTitle(file),
-        file:file,
-        stamp:stamp,
-        id:id,
-        content:content
-    });
-    const list = exports.recent;
-    const t = now()-24*60*60*7;
-    while(list.length>0&&list[0].stamp<t){
-        list.shift();
-    }
-});
-
 exports.addDate = function(rows){
 	var time = "";
 	for(var i=0;i<rows.length;i++){
@@ -228,13 +222,15 @@ function conv(file){
 exports.conv=conv;
 
 exports.notice=function(file,node){
-    const unkownThreads = exports.unkownThreads;
-    for(var i=0;i<unkownThreads.length;i++){
-        if(unkownThreads[i].file==file)return;
-    }
-    const title = exports.getTitle(file);
-    unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:title});
-    exports.update.emit("notice",file,title,node);
+    knex.select("file").from("unknown").where("file",file).then(function(rows){
+        if(rows.length>0)return;
+        const title = exports.getTitle(file);
+        exports.update.emit("notice",file,title,node);
+        return knex("unknown").insert({node:node.replace(/\//g,"+"),file:file,title:title});
+    }).catch(function(){});
+};
+exports.unkownThreads=function(){
+    return knex.select().from("unknown").orderBy("id","desc");
 };
 
 function threadFile(title){return "thread_"+new Buffer(title).toString("hex").toUpperCase();};

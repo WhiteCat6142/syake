@@ -72,6 +72,11 @@ function readNode(node,t){
 			const x = body.split("<>");
 			for(var i=0;i<rows.length;i++){
 				if(rows[i].file==x[2]){
+					if(x[3]){
+						for(var ct of x[3].substr(4).split(" ")){
+							if((!rows[i].tag)||rows[i].tag.indexOf(ct)==-1)api.thread.addTag(x[2],ct);
+						}
+					}
 					if(!(rows[i].laststamp==x[0]&&rows[i].lastid==x[1]))readHead(node,x[2]);
 					rows.splice(i,1);
 					return;
@@ -180,8 +185,17 @@ setInterval(function(){
 	console.log("rejoin");
 	var list=api.config.friends;
 	var x=8;
+	if (api.config.update && list.length < 3){
+		for (var n of api.config.nodes) {
+			readLine(nodeUrl(n, "node"), addFriend);
+		}
+	}
 	for(var i=0;i<list.length;i++){
-		if((list.length<8)||(Math.random()<x/10)){join(list[i]);x--;}
+		if((list.length>10)&&(Math.random()<1/10)){
+			readLine(nodeUrl(list[i],"bye")+"/"+api.host+":"+api.port+"+server.cgi");
+			list.splice(i,1);i--;
+		}
+		else if((list.length<8)||(Math.random()<x/10)){join(list[i]);x--;}
 	}
 },api.config.joining*60*1000);
 
@@ -203,4 +217,12 @@ api.update.on("update",function(file,stamp,id){
     for(var n of api.config.friends.concat(nodes)){
         readLine(nodeUrl(n,"update")+s);
      }
+});
+
+api.update.on("wanted",function(file) {
+	api.config.nodes.forEach(function(n){
+		if(n)readLine(nodeUrl(n, "have",file),function(x) {
+			if(x=="YES")api.notice(file,n);
+		});
+	});
 });
