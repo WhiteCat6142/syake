@@ -16,10 +16,12 @@ app.use(function(req, res, next){
 });
     
 app.get('/',function(req,res){
+    api.unkownThreads().then(function(un){
     res.render('admin',{
         nodes:nodeManeger.nodes.map(function(ele){return ele.replace(/\//g,"+")}),
-        x:api.unkownThreads,
+        x:un,
         friends:api.config.friends
+    });
     });
 });
 app.post('/node',function(req,res){

@@ -10,8 +10,6 @@ const check = require('./apollo').check;
 
 exports.update=new EventEmitter();
 
-exports.unkownThreads=[];
-
 exports.port=3000;
 
 var config=au.read("./file/config.json","json");
@@ -41,6 +39,12 @@ knex.schema.hasTable('threads').then(function (exists) {
         knex.raw("CREATE index tiindex on tag(id);").then();
         knex.raw("CREATE index ttindex on tag(tag);").then();
     });
+    knex.schema.createTable("unknown", function (table) {
+        table.increments("tid").primary();
+        table.string("file").unique().notNullable();
+        table.string("title").unique().notNullable();
+        table.string("node").notNullable();
+    }).then();
     if (exports.config.image) fs.mkdir("./cache");
 });
 
@@ -65,16 +69,13 @@ exports.threads = {
       const t = now();
 	  const file = threadFile(title);
       console.log("newThread:" + t + " " + t + " " + file + " " + title);
-      const l=exports.unkownThreads;
-      for(var i=0;i<l.length;i++){
-          if(l[i].file==file){l.splice(i,1);}
-      }
       knex.transaction(function (trx) {
           return co(function* () {
               try {
                   yield trx.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
                   yield trx("threads").insert({ stamp: t, title: title, dat: t, file: file });
                   yield trx.raw("CREATE index " + file + "_sindex on " + file + "(stamp);");
+                  yield trx("unknown").where("file",file).del();
                   if (exports.config.image) fs.mkdir("./cache/" + file, callback);
                   else setImmediate(callback);
               } catch (e) { console.log(e); }
@@ -89,6 +90,9 @@ exports.threads = {
 		return s.then(function(rows){
 			if(rows.length==1)return Promise.resolve(rows[0]);
             console.log("wanted:"+exports.getTitle(option.file));
+            knex.select("file").from("unknown").where("file",file).then(function(rows){
+                if(rows.length==0)exports.update.emit("wanted",option.file);
+            }).catch(function(){});
 			return Promise.reject();
 		});
 	}
@@ -209,13 +213,15 @@ function conv(file){
 exports.conv=conv;
 
 exports.notice=function(file,node){
-    const unkownThreads = exports.unkownThreads;
-    for(var i=0;i<unkownThreads.length;i++){
-        if(unkownThreads[i].file==file)return;
-    }
-    const title = exports.getTitle(file);
-    unkownThreads.push({node:node.replace(/\//g,"+"),file:file,title:title});
-    exports.update.emit("notice",file,title,node);
+    knex.select("file").from("unknown").where("file",file).then(function(rows){
+        if(rows.length>0)return;
+        const title = exports.getTitle(file);
+        exports.update.emit("notice",file,title,node);
+        return knex("unknown").insert({node:node.replace(/\//g,"+"),file:file,title:title});
+    }).catch(function(){});
+};
+exports.unkownThreads=function(){
+    return knex.select().from("unknown").orderBy("id","desc");
 };
 
 function threadFile(title){return "thread_"+new Buffer(title).toString("hex").toUpperCase();};
