@@ -14,9 +14,11 @@ function index(req, res) {
  });
 }
 function changes(req, res) {
- api.threads.get({sort:true,tag:req.query.tag.split(" ")}).then(function(threads) {
+ var t=req.query.tag;
+ api.threads.get({sort:true,tag:(t)?t.split(" "):null}).then(function(threads) {
      res.type("text/plain; charset=utf-8");
      res.endX(JSON.stringify(threads.map(function(t) {
+         if(t.tag)return {s:t.stamp,t:t.title,r:t.records,a:t.tag};
          return {s:t.stamp,t:t.title,r:t.records};
      })));
  });
@@ -64,7 +66,7 @@ function rss(req,res){
     const rss = new RSS(api.config.feed);
     for(var i=0;i<recent.length;i++){
         var body=api.conv(recent[i].file)(recent[i]);
-        body.body=tohtml(body.body);
+        body.body=tohtml(body.body,true);
         var x = recent[i];
         rss.item({
             url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),

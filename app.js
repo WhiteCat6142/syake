@@ -20,6 +20,10 @@ app.use("/",express.static('www',{maxAge:86400000*7}));
 
 app.use(logger('dev'));
 
+const server = express.Router();
+app.use("/server.cgi",server);
+require('./syake/server').set(server);
+
 app.use(cache.get);
 app.use(cache.put);
 const fs = require("fs");
@@ -43,10 +47,6 @@ jade.compileFile('./views/base.jade', options);
 const admin = express.Router();
 app.use("/admin.cgi",admin);
 require('./syake/admin').set(admin);
-
-const server = express.Router();
-app.use("/server.cgi",server);
-require('./syake/server').set(server);
 
 const dat = express.Router();
 app.use("/",dat);

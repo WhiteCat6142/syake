@@ -12,9 +12,9 @@
     "update":false,
     "joining":18,
     "range":{
-        "node":2,
-        "head":4,
-        "newThread":90,
+        "node":4,
+        "head":7,
+        "newThread":180,
         "first":0,
         "interval":230
     },
