@@ -6,7 +6,7 @@ const EventEmitter = require('events').EventEmitter;
 const fs = require('fs');
 const au = require("../autosaver");
 const co = require('co');
-const check = require('./apollo').check;
+const check = require('./apollo');
 
 exports.update=new EventEmitter();
 
@@ -46,6 +46,10 @@ knex.schema.hasTable('threads').then(function (exists) {
         table.string("node").notNullable();
     }).then();
     if (exports.config.image) fs.mkdir("./cache");
+});
+knex.schema.hasTable('unknown').then(function (exists) {
+    if (exists) return;
+    require('./dbfixing2')(knex);
 });
 
 exports.threads = {

@@ -69,8 +69,6 @@ const gateway = express.Router();
 app.use("/",gateway);
 require('./syake/gateway').set(gateway);
 
-//require('./syake/apollo');
-
 //app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
 app.use(function(req, res, next){res.sendStatus(404);});
 

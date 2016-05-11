@@ -83,6 +83,7 @@ function update(req, res) {
 function recent(req, res) {
 	api.threads.get({time:req.params.time}).then(function(rows){
 		for(var i=0; i<rows.length; i++){
+			if(!rows[i].lastid)continue;
 			if(i>0)res.write("\n");
 			res.write(rows[i].laststamp+"<>"+rows[i].lastid+"<>"+rows[i].file);
 			if(rows[i].tag)res.write("<>tag:"+rows[i].tag.join(" "));

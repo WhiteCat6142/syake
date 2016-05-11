@@ -1,7 +1,7 @@
 const image=["png","bmp","gif","jpg","jpeg","bin","tif","tiff"]
 
 
-exports.t=function(body,r) {
+module.exports=function(body,r) {
         var b3 = body.match(/h?ttps?:\/\/[0-9-_a-zA-Z.\/%!#$&+,:;=@\[\]\?]+/g);
         if (b3) {
           b3.forEach(function (ele) {

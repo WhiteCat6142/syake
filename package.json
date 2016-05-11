@@ -6,7 +6,7 @@
     "start": "node app"
   },
   "dependencies": {
-    "big-integer": "^1.6.15",
+    "big-integer": "^1.*",
     "body-parser": "*",
     "co": "^4.*",
     "comp-cache": "*",
