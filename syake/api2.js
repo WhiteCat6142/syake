@@ -207,7 +207,7 @@ function conv(file){
 		}
         r.body=r.body||"";
         r.body=escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>");
-        if(file&&r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
+        if(file&&r.attach)r.body+="<br>http://"+exports.host+"/file/"+file+"/"+r.attach;
         return r;
     };
 }

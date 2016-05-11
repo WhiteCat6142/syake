@@ -61,10 +61,10 @@ api.update.on("update",function(file,stamp,id,content){
     }
 });
 
-var t=(Math.round(Date.now()/1000)-12*60*60)+"-";
-api.threads.get({sort:true,time:t}).then(function(rows){
+const time=(Math.round(Date.now()/1000)-12*60*60)+"-";
+api.threads.get({sort:true,time:time}).then(function(rows){
     rows.forEach(function(n){
-        api.thread.get(n.file,{sort:true,time:t}).then(function(rows){
+        api.thread.get(n.file,{sort:true,time:time}).then(function(rows){
             for(var x of rows){
     recent.unshift({
         title:n.title,
@@ -86,7 +86,7 @@ function rss(req,res){
         body.body=tohtml(body.body,true);
         var x = recent[i];
         rss.item({
-            url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
+            url:("http://"+api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
             title:x.title,
             description:body.body,
             date:body.date,

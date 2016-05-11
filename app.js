@@ -10,7 +10,7 @@ const api = require("./syake/api2");
 const cache = require("comp-cache");
 
 app.use(function(req, res, next){
-  if(!api.host)api.host="http://"+req.hostname+":"+(process.env.PORT ||3000);
+  if(!api.host)api.host=req.hostname+":"+(process.env.PORT ||3000);
   if(req.ip.match(api.config.vistor)){next();}else{res.sendStatus(403);}
 });
 
@@ -25,7 +25,12 @@ app.use("/server.cgi",server);
 require('./syake/server').set(server);
 
 app.use(function(req,res,next){
-  if(req.headers["origin"]!==api.host)res.sendStatus(400);
+  if(req.headers["origin"]){
+    console.log(req.headers);
+      var i=req.headers["origin"].indexOf("://");
+      if(req.headers["origin"].substr(i+3)!==api.host)res.sendStatus(400);
+      return;
+  }
   res.setHeader("X-Frame-Options","DENY");
     if(req.accepts("html")){
         res.setHeader("Content-Security-Policy","default-src 'none';img-src *;media-src *;script-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com; style-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com;")
