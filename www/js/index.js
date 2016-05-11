@@ -1,5 +1,6 @@
 "use strict";
 
+window.onload=function(){document.getElementById("cmd").value="post";};
 $("#changes").click(function(){
     this.parentNode.removeChild(this);
     $.ajax({url:"/gateway.cgi/api/changes",timeout:10000,success: function(d){

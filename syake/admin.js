@@ -6,6 +6,10 @@ const cache =require('comp-cache');
 
 exports.set=function(app){
 app.use(function(req, res, next){
+  if(req.xhr){
+      res.sendStatus(400);
+      return;
+  }
   var user = req.headers["authorization"];
   if(user){
       user=new Buffer(user.substr("Basic ".length), 'base64').toString();

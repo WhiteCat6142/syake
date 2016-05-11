@@ -24,6 +24,15 @@ const server = express.Router();
 app.use("/server.cgi",server);
 require('./syake/server').set(server);
 
+app.use(function(req,res,next){
+  if(req.headers["origin"]!==api.host)res.sendStatus(400);
+  res.setHeader("X-Frame-Options","DENY");
+    if(req.accepts("html")){
+        res.setHeader("Content-Security-Policy","default-src 'none';img-src *;media-src *;script-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com; style-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com;")
+    }
+    next();
+});
+
 app.use(cache.get);
 app.use(cache.put);
 const fs = require("fs");

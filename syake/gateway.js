@@ -61,6 +61,23 @@ api.update.on("update",function(file,stamp,id,content){
     }
 });
 
+var t=(Math.round(Date.now()/1000)-12*60*60)+"-";
+api.threads.get({sort:true,time:t}).then(function(rows){
+    rows.forEach(function(n){
+        api.thread.get(n.file,{sort:true,time:t}).then(function(rows){
+            for(var x of rows){
+    recent.unshift({
+        title:n.title,
+        file:n.file,
+        stamp:x.stamp,
+        id:x.id,
+        content:x.content
+    });
+            }
+        });
+    });
+});
+
 function rss(req,res){
     res.setHeader("Content-Type","text/xml; charset=UTF-8");
     const rss = new RSS(api.config.feed);
@@ -79,9 +96,9 @@ function rss(req,res){
     res.endX(rss.xml());
 }
 function newT(req,res){
-    if(b.cmd!="post")return;
+    //if(req.body.cmd!="post")return;
     api.threads.create(req.body.title);
-    res.redirect("/thread.cgi/"+req.params.title);
+    res.redirect("/thread.cgi/"+req.body.title);
 }
 
 exports.set=function(app){

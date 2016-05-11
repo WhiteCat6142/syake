@@ -206,6 +206,7 @@ function conv(file){
 			if(x)r[x[1]]=x[2];
 		}
         r.body=r.body||"";
+        r.body=escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>");
         if(file&&r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
         return r;
     };
