@@ -5,7 +5,7 @@ block content
   ul
    each node in nodes
     li
-     |!{node}
+     |#{node}
      a(href='node/del/'+node) [x]
   form(action='node' method='post')
    input(name="node" type="text")
@@ -14,7 +14,7 @@ block content
   ul
    each node in friends
     li
-     |!{node}
+     |#{node}
   form(action='friend' method='post')
    input(name="node" type="text")
    button(type="submit") Add

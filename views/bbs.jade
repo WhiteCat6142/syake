@@ -13,12 +13,12 @@ block content
      .panel.panel-default.new-record
       .panel-heading
        span.glyphicon.glyphicon-tag
-       |!{msg.id}&nbsp;
+       |#{msg.id}&nbsp;
        if msg.name
         span.glyphicon.glyphicon-user
-        |!{msg.name}&nbsp;
+        |#{msg.name}&nbsp;
        span.glyphicon.glyphicon-time
-       |!{msg.date}
+       |#{msg.date}
       .clearfix
       .panel-body
        |!{msg.body}

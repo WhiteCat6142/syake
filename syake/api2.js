@@ -62,8 +62,8 @@ exports.threads = {
 		if(option.time)s=s.whereRaw(times(option.time));
 		if(option.sort)s=s.orderBy("stamp","desc");
 		if(option.limit)s=s.limit(option.limit);
-        if(option.tag)s=s.whereIn("tag",option.tag);
         s=s.leftJoin("tag","tid","id").groupBy("tid");
+        if(option.tag)s=s.having("COUNT(tid)",">=",option.tag.length).whereIn("tag",option.tag);
         s=s.then(function(rows){
             for(var t of rows){
                 if(t.tag)t.tag=t.tag.split(",");
@@ -215,7 +215,8 @@ function conv(file){
 			if(x)r[x[1]]=x[2];
 		}
         r.body=r.body||"";
-        if(file&&r.attach)r.body+="<br>"+exports.host+"/file/"+file+"/"+r.attach;
+        r.body=escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>");
+        if(file&&r.attach)r.body+="<br>https://"+exports.host+"/file/"+file+"/"+r.attach;
         return r;
     };
 }

@@ -14,9 +14,11 @@ function index(req, res) {
  });
 }
 function changes(req, res) {
- api.threads.get({sort:true,tag:req.query.tag.split(" ")}).then(function(threads) {
+ var t=req.query.tag;
+ api.threads.get({sort:true,tag:(t)?t.split(" "):null}).then(function(threads) {
      res.type("text/plain; charset=utf-8");
      res.endX(JSON.stringify(threads.map(function(t) {
+         if(t.tag)return {s:t.stamp,t:t.title,r:t.records,a:t.tag};
          return {s:t.stamp,t:t.title,r:t.records};
      })));
  });
@@ -59,15 +61,32 @@ api.update.on("update",function(file,stamp,id,content){
     }
 });
 
+const time=(Math.round(Date.now()/1000)-12*60*60)+"-";
+api.threads.get({sort:true,time:time}).then(function(rows){
+    rows.forEach(function(n){
+        api.thread.get(n.file,{sort:true,time:time}).then(function(rows){
+            for(var x of rows){
+    recent.unshift({
+        title:n.title,
+        file:n.file,
+        stamp:x.stamp,
+        id:x.id,
+        content:x.content
+    });
+            }
+        });
+    });
+});
+
 function rss(req,res){
     res.setHeader("Content-Type","text/xml; charset=UTF-8");
     const rss = new RSS(api.config.feed);
     for(var i=0;i<recent.length;i++){
         var body=api.conv(recent[i].file)(recent[i]);
-        body.body=tohtml(body.body);
+        body.body=tohtml(body.body,true);
         var x = recent[i];
         rss.item({
-            url:(api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
+            url:("http://"+api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
             title:x.title,
             description:body.body,
             date:body.date,
@@ -77,9 +96,9 @@ function rss(req,res){
     res.endX(rss.xml());
 }
 function newT(req,res){
-    if(b.cmd!="post")return;
+    //if(req.body.cmd!="post")return;
     api.threads.create(req.body.title);
-    res.redirect("/thread.cgi/"+req.params.title);
+    res.redirect("/thread.cgi/"+req.body.title);
 }
 
 exports.set=function(app){

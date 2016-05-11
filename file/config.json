@@ -11,10 +11,10 @@
     "joining":18,
     "del":true,
     "range":{
-        "node":2,
-        "head":4,
-        "newThread":90,
-        "first":2,
+        "node":4,
+        "head":7,
+        "newThread":180,
+        "first":4,
         "interval":400
     },
     "feed":{
