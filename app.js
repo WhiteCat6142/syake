@@ -26,7 +26,6 @@ require('./syake/server').set(server);
 
 app.use(function(req,res,next){
   if(req.headers["origin"]){
-    console.log(req.headers);
       var i=req.headers["origin"].indexOf("://");
       if(req.headers["origin"].substr(i+3)!==api.host)res.sendStatus(400);
       return;
