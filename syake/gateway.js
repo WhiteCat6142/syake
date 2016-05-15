@@ -2,7 +2,7 @@
 
 const api = require('./api2');
 const RSS = require('rss');
-const tohtml = require('./tohtml').t;
+const tohtml = require('./tohtml');
 
 function index(req, res) {
  Promise.all([

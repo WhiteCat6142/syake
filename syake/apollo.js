@@ -55,7 +55,7 @@ function target(x,t) {
     return result.slice(0,-2);
 }
 
-exports.check=function(file,stamp,id,body){
+module.exports=function(file,stamp,id,body){
     if(body.file_name&&body.file_name!=file)throw "diffrent file";
     if(body.stamp&&body.stamp!=stamp)throw "diffrent stamp";
     if(body.target&&!varify(target(body,body.target),body.sign,body.pubkey))throw "wrong sign";
