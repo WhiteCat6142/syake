@@ -29,6 +29,7 @@ window.onload = function () { document.getElementById("cmd").value = "post"; };
   listen();
 })();
 
+/*
 function genkey(k) {
   var pq=md5(k)+md5(k+"pad1")+md5(k+"pad2")+md5(k+"pad3");
   console.log(pq.length);
@@ -166,3 +167,4 @@ b="NjA2NzQyMSwyMjQ3ODQsNjg4MDU1OCw4Nzk5NjQ1LDgzODk2MjQsNDQ5NTEyOCw2MDI4NTY0LDg3N
 //console.log(new Buffer(a,base64))
 
 //if(genkey("test").pub!="DpmzfQSOhbpxE7xuaiEao3ztv9NAJi/loTs2N43f5hC3XpT3z9VhApcrYy94XhMBKONo5H14c8STrriPJnCcVA")throw "err";
+*/
