@@ -3,8 +3,13 @@ extends base
 block append scripts
  script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.3.0/js/md5.min.js")
  script(type="text/javascript" src="http://peterolson.github.com/BigInteger.js/BigInteger.min.js")
+ script(type="text/javascript" src="/zepto.js")
+ script(type="text/javascript" src="/md5.js")
+ script(type="text/javascript" src="/BigInt.js")
+ script(type="text/javascript" src="/js/sign.js")
  script(type="text/javascript" src="/js/bbs.js")
  script(type="text/javascript" src="/js/fx_methods.js")
+ link(rel="stylesheet" type="text/css" href="/bootstrap.css")
  link(rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.2/css/lightbox.min.css" integrity="sha384-pnkRj/o9mh07rfWxV9yY0Tik4Cn+tYLX+hu+gfN2s5bd7hwM1q5rAqGyA21Iz17u" crossorigin="anonymous")
  script(type="text/javascript" src="/js/lightbox.min.js")
 
@@ -22,26 +27,31 @@ block content
       .clearfix
       .panel-body
        |!{msg.body}
-    form.well.col-md-12(method="post",action="/thread.cgi")
+    form.well.col-md-12(method="post",action="/thread.cgi",id="post-form")
      input(type="hidden",name="cmd",id="cmd")
      input(type="hidden",value=file,name="file")
      .input-wrapper
-      .col-md-6
+      .col-md-4
        span.input-group-addon
         span.glyphicon.glyphicon-user
         |Name
        input.form-control(type="text",name="name")
-      .col-md-6
+      .col-md-5
        span.input-group-addon
         span.glyphicon.glyphicon-envelope
         |Mail
        input.form-control(type="text",name="mail")
+      .col-md-3
+       span.input-group-addon
+        span.glyphicon.glyphicon-eye-close
+        |Sign
+       input.form-control(type="text",name="sign")
       .col-md-12
        span.input-group-addon
         span.glyphicon.glyphicon-font
         |Text
        textarea.form-control(name="body",rows="6")
-      .col-md-8.col-md-offset-4
+      .col-md-8.col-md-offset-5
        button.btn.btn-primary(type="submit")
         span.glyphicon.glyphicon-pencil
         |Post

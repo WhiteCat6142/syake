@@ -49,7 +49,7 @@ knex.schema.hasTable('threads').then(function (exists) {
 });
 knex.schema.hasTable('unknown').then(function (exists) {
     if (exists) return;
-    require('./dbfixing2')(knex);
+    require('../dbfixing2')(knex);
 });
 
 exports.threads = {
@@ -158,13 +158,20 @@ exports.spam=function(id){
     },function(){return Promise.resolve();});
 };
 
-exports.post = function (file, name, mail, body, time, subject) {
+exports.post = function (file, name, mail, body, time, subject, sign) {
     //if(subject)exports.threads.create(subject);
     exports.threads.info(file).then(function (row) {
         var s = "";
         if (mail) s += "mail:" + escape(mail) + "<>";
         if (name) s += "name:" + escape(name) + "<>";
         s += "body:" + escape(body).replace(/\r\n|\r|\n/g, "<br>");
+        if(sign){
+            s+="<>";
+            s+="file_name:"+file.file+"<>";
+            s+="pubkey:"+sign.pubkey+"<>";
+            s+="sign:"+sign.sign+"<>";
+            s+="target:"+sign.target;
+        }
         exports.thread.post(row.file, time || now(), null, s);
  });  
 };
@@ -210,7 +217,7 @@ function conv(file){
 			if(x)r[x[1]]=x[2];
 		}
         r.body=r.body||"";
-        r.body=escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>");
+        r.body=escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>").replace(/&amp;/g, "&");
         if(file&&r.attach)r.body+="<br>http://"+exports.host+"/file/"+file+"/"+r.attach;
         return r;
     };

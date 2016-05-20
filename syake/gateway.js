@@ -40,7 +40,7 @@ function thread(req, res) {
 function post(req, res){
 const b =req.body;
  if(b.cmd!="post")return;
-api.post({file:b.file},b.name,b.mail,b.body,undefined);
+api.post({file:b.file},b.name,b.mail,b.body,undefined,undefined,(b.sign)?{sign:b.sign,pubkey:b.pubkey,target:b.target}:undefined);
 res.redirect('back');
 }
 
