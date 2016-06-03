@@ -32,7 +32,7 @@ app.use(function(req,res,next){
   }
   res.setHeader("X-Frame-Options","DENY");
     if(req.accepts("html")){
-        res.setHeader("Content-Security-Policy","default-src 'none';img-src *;media-src *;script-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com; style-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com;")
+//        res.setHeader("Content-Security-Policy","default-src 'none';img-src * data:;media-src * ;font-src cdn.honokak.osaka;script-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com; style-src 'self' cdn.honokak.osaka cdnjs.cloudflare.com;")
     }
     next();
 });
@@ -61,13 +61,13 @@ const admin = express.Router();
 app.use("/admin.cgi",admin);
 require('./syake/admin').set(admin);
 
-const dat = express.Router();
-app.use("/",dat);
-require('./syake/dat').set(dat);
-
 const gateway = express.Router();
 app.use("/",gateway);
 require('./syake/gateway').set(gateway);
+
+const dat = express.Router();
+app.use("/",dat);
+require('./syake/dat').set(dat);
 
 //app.use(function(err, req, res, next){res.status(500).end(err.name + ": " + err.message+err);console.log(err);});
 app.use(function(req, res, next){res.sendStatus(404);});

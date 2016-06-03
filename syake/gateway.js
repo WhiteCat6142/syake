@@ -29,12 +29,19 @@ function thread(req, res) {
     api.threads.info({ title: title }).then(function (row) {
         const file = row.file;
         res.setHeader('Last-Modified', new Date(row.stamp).toUTCString());
-        const offset = Math.max(row.records - 75, 0);//limit:10,offset:offset
-        api.thread.convert(file, {offset:offset,limit:75}).then(function (rows) {
-                rows.forEach(function(t) {t.body=tohtml(t.body);});
-                res.renderX('bbs', { title: title, messages: rows, file: file });
-            });
+        res.renderX('bbs', { title: title, file: file,records: row.records});
     }).catch(function () { res.sendStatus(404); });
+}
+
+function threadapi(req, res) {
+    const file = req.query.f;
+    const num = req.query.n|0;
+    api.thread.convert(file, { offset: num, limit: 75 }).then(function (rows) {
+        rows.forEach(function (t) {
+            if (t.sign) { t.sign = undefined; t.target = undefined; t.pubkey = t.pubkey.substr(0, 11); }
+        });
+        res.endX(JSON.stringify(rows));
+    });
 }
 
 function post(req, res){
@@ -108,6 +115,7 @@ app.get('/gateway.cgi/api/changes',changes);
 app.get('/gateway.cgi/rss',rss);
 app.post('/gateway.cgi/new',newT);
 app.get('/thread.cgi/:id',thread);
+app.get('/gateway.cgi/api/thread',threadapi);
 app.get('/thread.cgi/:id/:i',thread);
 app.post('/thread.cgi',post);
 };

@@ -49,3 +49,37 @@ $('#post-form').submit(function(event){
     location.reload();
   }
 });
+
+marked.setOptions({
+    highlight: function(code,lang) {
+        return hljs.highlightAuto(code,[lang]).value;
+    }
+});
+var tmpl = Hogan.compile($('#tmpl').text());
+
+var image=["png","bmp","gif","jpg","jpeg","bin","tif","tiff"];
+function tohtml(body) {
+        var b3 = body.match(/h?ttps?:\/\/[0-9-_a-zA-Z.\/%!#$&+,:;=@\[\]\?]+/g);
+        if (b3) {
+          for(var j=0;j<b3.length;j++){
+            var ele=b3[j];
+            var i=link.lastIndexOf(".");
+            if ((i>0)&&(image.indexOf(link.substr(i+1))!=-1)){
+              body = body.replace(ele, '<a href="' + link + '" data-lightbox="image">' + '<img class="lazy" "data-src="' + link + '"></a>');
+            } 
+             else body = body.replace(ele, '<a href="' + link + '">' + ele + '</a>');
+          }
+        }
+    return body;
+};
+
+function update(data){
+  for(var i=0;i<data.length;i++){
+    var t=data[i].body;
+    data[i].body=(t.startsWith("@markdown"))?marked(t.substring("@markdown".length)):tohtml(t);
+  }
+  $("#msg").html(tmpl.render({msgs:data}));
+}
+
+var file=document.forms[0].file.value;
+$.getJSON("/gateway.cgi/api/thread?f="+file,update);
