@@ -35,8 +35,9 @@ function thread(req, res) {
 
 function threadapi(req, res) {
     const file = req.query.f;
-    const num = req.query.n|0;
-    api.thread.convert(file, { offset: num, limit: 75 }).then(function (rows) {
+    const num = Math.max(req.query.n|0,0);
+    const id =req.query.i;
+    api.thread.convert(file, (id)?{id:id}:{ offset: num, limit: 40 }).then(function (rows) {
         rows.forEach(function (t) {
             if (t.sign) { t.sign = undefined; t.target = undefined; t.pubkey = t.pubkey.substr(0, 11); }
         });
@@ -93,7 +94,7 @@ function rss(req,res){
         body.body=tohtml(body.body,true);
         var x = recent[i];
         rss.item({
-            url:("http://"+api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"/"+x.id),
+            url:("http://"+api.host+"/thread.cgi/"+encodeURIComponent(x.title)+"#"+x.id),
             title:x.title,
             description:body.body,
             date:body.date,

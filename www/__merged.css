@@ -125,3 +125,12 @@ a {
 span{
     padding: 3px;
 }
+
+.pop{
+    position: absolute;
+    background-color: lightcyan;
+    padding:1px !important;
+    color:black;
+    margin: 10px;
+    z-index: 101;
+}

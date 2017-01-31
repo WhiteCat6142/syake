@@ -43,6 +43,7 @@ function get(req, res) {
 	const file=req.params.file;
 	api.thread.get(file,{time:req.params.time,id:req.params.id}).then(attach(file)).then(function(rows){
 		for(var i=0; i<rows.length; i++){
+			if(rows[i].content.indexOf("attach:")!=-1&&!api.config.image)continue;
 			if(i>0)res.write("\n");
 			res.write(rows[i].stamp+"<>"+rows[i].id+"<>"+rows[i].content);
 		}

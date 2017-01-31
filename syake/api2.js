@@ -121,7 +121,9 @@ exports.thread = {
         else { id = md5; }
         check(file,stamp,id,conv()({content:body,id:id}));
         if (body.indexOf("attach:") != -1) {
-            if (!exports.config.image) { throw "no file mode"; }
+            if (!exports.config.image) {
+                body = body.replace(/attach:[^(<>)]*/g, ("attach:none"));
+            }else{
             const suffix = body.match(/suffix:([^(<>)]*)/)[1];
             const attach = body.match(/attach:([^(<>)]*)/)[1];
             const data = new Buffer(attach, "base64");
@@ -129,6 +131,7 @@ exports.thread = {
             const name = md5 + "." + suffix;
             body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
             fs.writeFile("./cache/" + file + "/" + name, data, {flag:"wx"}, function (err) { if (!err)console.log(name);});
+            }
         }
         add(file,stamp|0,id,body);
         }catch(e){

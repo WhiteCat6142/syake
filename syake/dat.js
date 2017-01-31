@@ -119,7 +119,7 @@ function read(req,res){
         if(!id)res.redirect("/thread.cgi/"+title);
         else{
             api.thread.get(row.file,{sort:true,offset:id+1,limit:1,head:true}).then(function(rows){
-                res.redirect("/thread.cgi/"+title+"/"+rows[id-1].id);
+                res.redirect("/thread.cgi/"+title+"#"+rows[id-1].id);
             });
         }
     });

@@ -1,7 +1,7 @@
 extends base
 
 block append scripts
- .hidden #{records}
+ .hidden(id="records") #{records}
  script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.3.0/js/md5.min.js")
  script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js")
  script(type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js")
@@ -46,7 +46,7 @@ block content
        a.btn(href="/gateway.cgi/motd") 利用規約
     script(type="text/template",id="tmpl")
      |{{#msgs}}
-     .panel.panel-default.new-record
+     .panel.panel-default.new-record(id="{{id}}")
       .panel-heading
        span.glyphicon.glyphicon-tag {{id}}
        |{{#name}}
