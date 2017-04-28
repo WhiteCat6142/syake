@@ -1,30 +1,19 @@
 {
-    "vistor":"(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)",
-    "user":"admin:p0ss",
-    "nodes":[
+    "vistor": "(^((::ffff:)?(127|10)\\.[0-9\\.])|.*)",
+    "user": "admin:p0ss",
+    "nodes": [
         "localhost:8080/server.cgi",
         "node.shingetsu.info:8000/server.cgi",
-        "ygg.ch:80/server",
-        "rep4649.ddo.jp:8000/server.cgi",
-        "","","",""],
-    "friends":[],
-    "deny":[],
-    "update":false,
-    "joining":18,
-    "range":{
-        "node":4,
-        "head":7,
-        "newThread":180,
-        "first":0,
-        "interval":230
-    },
-    "feed":{
-        "title": "shinGETsu",
-        "description": "shinGETsu's comments",
-        "feed_url": "/gateway.cgi/rss",
-        "image_url": "/favicon.ico",
-        "author": "WhiteCat6142",
-        "language": "ja"
+        "rep4649.ddo.jp:8000/server.cgi"
+    ],
+    "friends": [],
+    "deny": [],
+    "update": false,
+    "range": {
+        "node": 4,
+        "head": 7,
+        "newThread": 366,
+        "interval": 5
     },
     "image": true,
     "db": {

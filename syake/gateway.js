@@ -39,9 +39,11 @@ function threadapi(req, res) {
     const id = req.query.i;
     api.thread.convert(file, (id) ? { id: id } : { offset: num, limit: 40 }).then(function(rows) {
         rows.forEach(function(t) {
-            if (t.sign) { t.sign = undefined;
+            if (t.sign) {
+                t.sign = undefined;
                 t.target = undefined;
-                t.pubkey = t.pubkey.substr(0, 11); }
+                t.pubkey = t.pubkey.substr(0, 11);
+            }
         });
         res.endX(JSON.stringify(rows));
     });
@@ -104,9 +106,18 @@ function tohtml(body) {
     return body;
 };
 
+var rssOption = {
+    "title": "shinGETsu",
+    "description": "shinGETsu's comments",
+    "feed_url": "/gateway.cgi/rss",
+    "image_url": "/favicon.ico",
+    "author": "shinGETsu",
+    "language": "ja"
+};
+
 function rss(req, res) {
     res.setHeader("Content-Type", "text/xml; charset=UTF-8");
-    const rss = new RSS(api.config.feed);
+    const rss = new RSS(rssOption);
     for (var i = 0; i < recent.length; i++) {
         var body = api.conv(recent[i].file)(recent[i]);
         body.body = tohtml(body.body, true);
