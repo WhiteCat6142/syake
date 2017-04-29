@@ -76,13 +76,14 @@ function readNode(node, t) {
             const x = body.split("<>");
             for (var i = 0; i < rows.length; i++) {
                 if (rows[i].file == x[2]) {
+                    if (rows[i].used) return;
                     if (x[3]) {
                         for (var ct of x[3].substr(4).split(" ")) {
                             if ((!rows[i].tag) || rows[i].tag.indexOf(ct) == -1) api.thread.addTag(x[2], ct);
                         }
                     }
                     if (!(rows[i].laststamp == x[0] && rows[i].lastid == x[1])) readHead(node, x[2]);
-                    rows.splice(i, 1);
+                    rows[i].used = true;
                     return;
                 }
             }
@@ -146,8 +147,10 @@ function time(r) {
 exports.ping = function(node) {
     return new Promise(function(resolve, reject) {
         get(nodeUrl(node, "ping")).then(
-            function(body) { if (body.startsWith("PONG\n")) resolve(true);
-                else reject(false); },
+            function(body) {
+                if (body.startsWith("PONG\n")) resolve(true);
+                else reject(false);
+            },
             function(err) { reject(false); }
         );
     });
@@ -203,8 +206,10 @@ setInterval(function() {
             readLine(nodeUrl(list[i], "bye") + "/:" + api.port + "+server.cgi");
             list.splice(i, 1);
             i--;
-        } else if ((list.length < 8) || (Math.random() < x / 10)) { join(list[i]);
-            x--; }
+        } else if ((list.length < 8) || (Math.random() < x / 10)) {
+            join(list[i]);
+            x--;
+        }
     }
 }, 15 * 60 * 1000);
 
@@ -214,7 +219,7 @@ if (api.config.update) {
     }
 }
 
-api.threads.get({ sort: true, limit: 1 }).then(function(rows) {
+api.threads.get({ sort: true, limit: 1 }).catch(function() { return [{ stamp: 3600 }] }).then(function(rows) {
     const t = rows[0].stamp - 60 * 60;
     for (var i = 0; i < nodes.length; i++) { readNode(nodes[i], t); }
 });

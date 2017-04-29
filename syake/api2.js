@@ -4,20 +4,17 @@ const crypto = require('crypto');
 const escape = require('escape-html');
 const EventEmitter = require('events').EventEmitter;
 const fs = require('fs');
-const au = require("../autosaver");
 const co = require('co');
 const check = require('./apollo');
 
 exports.update = new EventEmitter();
 
-exports.port = 3000;
-
-var config = au.read("./file/config.json", "json");
-exports.__defineGetter__("config", function() { return config.data; });
+exports.config = JSON.parse(fs.readFileSync("./file/config.json", "utf-8"));
+exports.port = exports.config.port;
 
 const knex = require('knex')(exports.config.db);
 
-var spamt = au.read("file/spam.txt", "txt");
+var spamt = fs.readFileSync("file/spam.txt", "utf-8");
 
 knex.schema.hasTable('threads').then(function(exists) {
     if (exists) return;
@@ -32,9 +29,7 @@ knex.schema.hasTable('threads').then(function(exists) {
         table.string("lastid", 32);
     }).then();
 
-    knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then(function() {
-        return knex.raw("CREATE unique index spamindex on spam(id);");
-    });
+    knex.raw("CREATE TABLE spam (id CHAR(32) NOT NULL UNIQUE);").then();
     knex.raw("CREATE TABLE tag (id INTEGER NOT NULL,tag TEXT NOT NULL,UNIQUE(id,tag));").then(function() {
         knex.raw("CREATE index tiindex on tag(id);").then();
         knex.raw("CREATE index ttindex on tag(tag);").then();
@@ -45,12 +40,8 @@ knex.schema.hasTable('threads').then(function(exists) {
         table.string("title").unique().notNullable();
         table.string("node").notNullable();
     }).then();
-    if (exports.config.image) fs.mkdir("./cache");
 });
-knex.schema.hasTable('unknown').then(function(exists) {
-    if (exists) return;
-    require('../dbfixing2')(knex);
-});
+if (exports.config.image) fs.mkdir("./cache");
 
 exports.threads = {
     get: function(option) {
@@ -76,7 +67,7 @@ exports.threads = {
         knex.transaction(function(trx) {
             return co(function*() {
                 try {
-                    yield trx.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
+                    yield trx.raw("CREATE TABLE " + file + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL,UNIQUE(id,stamp)));");
                     yield trx("threads").insert({ stamp: t, title: title, dat: t, file: file });
                     yield trx.raw("CREATE index " + file + "_sindex on " + file + "(stamp);");
                     yield trx("unknown").where("file", file).del();
@@ -117,7 +108,7 @@ exports.thread = {
                 if (body.match(s)) { throw "spam"; }
             }
             const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
-            if (id) { if (md5 != id) { console.log(id); throw "Abnormal MD5"; } } else { id = md5; }
+            if (id) { if (md5 != id) { throw "Abnormal MD5"; } } else { id = md5; }
             check(file, stamp, id, conv()({ content: body, id: id }));
             if (body.indexOf("attach:") != -1) {
                 if (!exports.config.image) {
@@ -130,6 +121,13 @@ exports.thread = {
                     const name = md5 + "." + suffix;
                     body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
                     fs.writeFile("./cache/" + file + "/" + name, data, { flag: "wx" }, function(err) { if (!err) console.log(name); });
+                }
+            }
+            var b2 = body.match(/\[\[[^(\]\])]*\]\]/g);
+            if (b2) {
+                for (var j = 0; j < b2.length; j++) {
+                    const file = b2[j].slice(2, -2);
+                    exports.threads.info({ title: file }).catch(function() { exports.update.emit("wanted", file); });
                 }
             }
             add(file, stamp | 0, id, body);
@@ -178,22 +176,15 @@ exports.post = function(file, name, mail, body, time, subject, sign) {
     });
 };
 
-const aday = 60 * 60 * 24;
-
 function add(file, stamp, id, content) {
     knex.transaction(function(trx) {
         return co(function*() {
-            var rows = yield trx.select("stamp", "id").from(file).whereBetween("stamp", [stamp - aday, stamp + aday]).andWhere("id", id);
-            if (rows.length > 0) {
-                if (stamp !== rows[0].stamp) console.log("duplicate post!");
-                return;
-            }
-            exports.update.emit('update', file, stamp, id, content);
             console.log("update:" + file + " " + stamp + " " + id + " " + content.substring(0, 16));
             yield Promise.all([
                 trx("threads").where("file", file).update({ stamp: now(), laststamp: stamp, lastid: id, records: trx.raw("records + 1") }),
                 trx(file).insert({ stamp: stamp, id: id, content: content })
             ]);
+            exports.update.emit('update', file, stamp, id, content);
         });
     });
 }
