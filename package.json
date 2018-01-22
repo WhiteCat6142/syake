@@ -1,23 +1,24 @@
 {
-  "name": "Syake",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "start": "node app"
-  },
-  "dependencies": {
-    "big-integer": "^1.*",
-    "body-parser": "*",
-    "co": "^4.*",
-    "comp-cache": "*",
-    "compression": "*",
-    "escape-html": "^1.*",
-    "express": "^4.*",
-    "iconv-lite": "^0.4.*",
-    "jade": "*",
-    "knex": "^0.10.*",
-    "morgan": "^1.*",
-    "rss": "^1.*",
-    "sqlite3": "*"
-  }
+    "name": "Syake",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "start": "node app",
+        "heroku-postbuild": "npm install pg"
+    },
+    "dependencies": {
+        "big-integer": "^1.*",
+        "body-parser": "*",
+        "co": "^4.*",
+        "comp-cache": "*",
+        "compression": "*",
+        "escape-html": "^1.*",
+        "express": "^4.*",
+        "iconv-lite": "^0.4.*",
+        "jade": "*",
+        "knex": "^0.10.*",
+        "morgan": "^1.*",
+        "rss": "^1.*",
+        "sqlite3": "*"
+    }
 }

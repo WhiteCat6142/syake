@@ -7,6 +7,7 @@ const Url = require('url');
 
 const nodes = api.config.nodes;
 exports.nodes = nodes;
+const host = "/" + api.host || "" + ":" + api.port + "+server.cgi";
 
 function update(file, stamp, id, node) {
     api.spam(id)
@@ -160,7 +161,7 @@ exports.read = readNode;
 exports.readAll = readAll;
 
 function join(node) {
-    readLine(nodeUrl(node, "join") + "/:" + api.port + "+server.cgi");
+    readLine(nodeUrl(node, "join") + host);
 }
 
 function addFriend(node) {
@@ -174,7 +175,7 @@ exports.addFriend = addFriend;
 
 exports.byebye = function() {
     for (var n of api.config.friends) {
-        readLine(nodeUrl(n, "bye") + "/:" + api.port + "+server.cgi");
+        readLine(nodeUrl(n, "bye") + host);
     }
     api.config.friends = [];
 };
@@ -203,7 +204,7 @@ setInterval(function() {
     }
     for (var i = 0; i < list.length; i++) {
         if ((list.length > 10) && (Math.random() < 1 / 10)) {
-            readLine(nodeUrl(list[i], "bye") + "/:" + api.port + "+server.cgi");
+            readLine(nodeUrl(list[i], "bye") + host);
             list.splice(i, 1);
             i--;
         } else if ((list.length < 8) || (Math.random() < x / 10)) {
@@ -226,7 +227,7 @@ api.threads.get({ sort: true, limit: 1 }).catch(function() { return [{ stamp: 36
 
 api.update.on("update", function(file, stamp, id) {
     if (stamp < Math.round(Date.now() / 1000) - 24 * 60 * 60) return;
-    const s = "/" + file + "/" + stamp + "/" + id + "/:" + api.port + "+server.cgi";
+    const s = "/" + file + "/" + stamp + "/" + id + host;
     console.log("update:" + s);
     for (var n of api.config.friends) {
         readLine(nodeUrl(n, "update") + s);

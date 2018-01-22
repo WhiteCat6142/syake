@@ -9,8 +9,15 @@ const check = require('./apollo');
 
 exports.update = new EventEmitter();
 
-exports.config = JSON.parse(fs.readFileSync("./file/config.json", "utf-8"));
+exports.config = JSON.parse(fs.readFileSync(process.env.config || "./file/config.json", "utf-8"));
 exports.port = exports.config.port;
+
+if (exports.config.db.client == "pg") {
+    const pg = require('pg');
+    pg.defaults.ssl = true;
+}
+
+if (process.env.DATABASE_URL) exports.config.db.connection = process.env.DATABASE_URL;
 
 const knex = require('knex')(exports.config.db);
 
@@ -55,7 +62,9 @@ exports.threads = {
             for (var t of rows) {
                 if (t.tag) t.tag = t.tag.split(",");
             }
-            return rows;
+            return rows; <<
+            <<
+            << < HEAD
         }, function() { return []; });
         if (option.addDate) return s.then(exports.addDate);
         return s;
@@ -93,46 +102,118 @@ exports.threads = {
     }
 };
 exports.thread = {
+        get: function(file, option) {
+            var s = knex.select((option.head) ? ["stamp", "id"] : undefined).from(file);
+            if (option.time) s = s.whereRaw(times(option.time));
+            if (option.id) s = s.andWhere("id", option.id);
+            if (option.limit && option.offset && (option.offset >= 0)) s = s.whereBetween("rowid", [option.offset, (option.limit + option.offset - 1)]);
+            return s.orderBy("stamp", "asc").catch(function() { return []; });
+        },
+        post: function(file, stamp, id, body) {
+            try {
+                if (!body) throw "Empty Message";
+                var ss = spamt.split("[\n\r]+");
+                for (var s of ss) {
+                    if (body.match(s)) { throw "spam"; }
+                }
+                const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
+                if (id) { if (md5 != id) { throw "Abnormal MD5"; } } else { id = md5; }
+                check(file, stamp, id, conv()({ content: body, id: id }));
+                if (body.indexOf("attach:") != -1) {
+                    if (!exports.config.image) {
+                        body = body.replace(/attach:[^(<>)]*/g, ("attach:none"));
+                    } else {
+                        const suffix = body.match(/suffix:([^(<>)]*)/)[1];
+                        const attach = body.match(/attach:([^(<>)]*)/)[1];
+                        const data = new Buffer(attach, "base64");
+                        const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
+                        const name = md5 + "." + suffix;
+                        body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
+                        fs.writeFile("./cache/" + file + "/" + name, data, { flag: "wx" }, function(err) { if (!err) console.log(name); });
+                    }
+                }
+                var b2 = body.match(/\[\[[^(\]\])]*\]\]/g);
+                if (b2) {
+                    for (var j = 0; j < b2.length; j++) {
+                        const file = b2[j].slice(2, -2);
+                        exports.threads.info({ title: file }).catch(function() { exports.update.emit("wanted", file); });
+                    }
+                }
+                add(file, stamp | 0, id, body);
+            } catch (e) {
+                knex("spam").insert({ id: id }).then(); ===
+                ===
+                =
+            },
+            function() { return []; });
+        if (option.addDate) return s.then(exports.addDate);
+        return s;
+    },
+    create: function(title, callback) {
+        const t = now();
+        const file = threadFile(title);
+        console.log("newThread:" + t + " " + t + " " + file + " " + title);
+        knex.transaction(function(trx) {
+            return co(function*() {
+                try {
+                    yield trx.raw("CREATE TABLE " + ff(file) + " (stamp INTEGER NOT NULL,id CHAR(32) NOT NULL,content TEXT NOT NULL);");
+                    yield trx("threads").insert({ stamp: t, title: title, dat: t, file: file });
+                    yield trx.raw("CREATE index " + ff(file, 55) + "_sindex on " + ff(file) + "(stamp);");
+                    yield trx("unknown").where("file", file).del();
+                    if (exports.config.image) fs.mkdir("./cache/" + file, callback);
+                    else setImmediate(callback);
+                } catch (e) { console.log(e); }
+            });
+        });
+    },
+    info: function(option) {
+        var s = knex.select("stamp", "records", "title", "file", "dat").from("threads");
+        if (option.file) s = s.where("file", option.file);
+        else if (option.title) s = s.where("title", option.title);
+        else if (option.dat) s = s.where("dat", option.dat);
+        return s.then(function(rows) {
+            if (rows.length == 1) return Promise.resolve(rows[0]);
+            console.log("wanted:" + exports.getTitle(option.file));
+            knex.select("file").from("unknown").where("file", file).then(function(rows) {
+                if (rows.length == 0) exports.update.emit("wanted", option.file);
+            }).catch(function() {});
+            return Promise.reject();
+        });
+    }
+};
+exports.thread = {
     get: function(file, option) {
-        var s = knex.select((option.head) ? ["stamp", "id"] : undefined).from(file);
+        var s = knex.select((option.head) ? ["stamp", "id"] : undefined).from(ff(file));
         if (option.time) s = s.whereRaw(times(option.time));
         if (option.id) s = s.andWhere("id", option.id);
-        if (option.limit && option.offset && (option.offset >= 0)) s = s.whereBetween("rowid", [option.offset, (option.limit + option.offset - 1)]);
-        return s.orderBy("stamp", "asc").catch(function() { return []; });
+        if (option.limit && option.offset && (option.offset >= 0)) s = s.limit(option.limit).offset(option.offset);
+        return s.orderBy("stamp", "asc").catch(function(e) { console.log(e); return []; });
     },
     post: function(file, stamp, id, body) {
         try {
             if (!body) throw "Empty Message";
-            var ss = spamt.split("[\n\r]+");
+            var ss = spamt.data.split("[\n\r]+");
             for (var s of ss) {
                 if (body.match(s)) { throw "spam"; }
             }
             const md5 = crypto.createHash('md5').update(body, 'utf8').digest('hex');
-            if (id) { if (md5 != id) { throw "Abnormal MD5"; } } else { id = md5; }
+            if (id) { if (md5 != id) { console.log(id); throw "Abnormal MD5"; } } else { id = md5; }
             check(file, stamp, id, conv()({ content: body, id: id }));
             if (body.indexOf("attach:") != -1) {
-                if (!exports.config.image) {
-                    body = body.replace(/attach:[^(<>)]*/g, ("attach:none"));
-                } else {
-                    const suffix = body.match(/suffix:([^(<>)]*)/)[1];
-                    const attach = body.match(/attach:([^(<>)]*)/)[1];
-                    const data = new Buffer(attach, "base64");
-                    const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
-                    const name = md5 + "." + suffix;
-                    body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
-                    fs.writeFile("./cache/" + file + "/" + name, data, { flag: "wx" }, function(err) { if (!err) console.log(name); });
-                }
-            }
-            var b2 = body.match(/\[\[[^(\]\])]*\]\]/g);
-            if (b2) {
-                for (var j = 0; j < b2.length; j++) {
-                    const file = b2[j].slice(2, -2);
-                    exports.threads.info({ title: file }).catch(function() { exports.update.emit("wanted", file); });
-                }
+                if (!exports.config.image) { throw "no file mode"; }
+                const suffix = body.match(/suffix:([^(<>)]*)/)[1];
+                const attach = body.match(/attach:([^(<>)]*)/)[1];
+                const data = new Buffer(attach, "base64");
+                const md5 = crypto.createHash('md5').update(data, 'utf8').digest('hex');
+                const name = md5 + "." + suffix;
+                body = body.replace(/attach:[^(<>)]*/g, ("attach:" + name));
+                fs.writeFile("./cache/" + file + "/" + name, data, { flag: "wx" }, function(err) { if (!err) console.log(name); });
             }
             add(file, stamp | 0, id, body);
         } catch (e) {
-            knex("spam").insert({ id: id }).then();
+            knex("spam").insert({ id: id }).then(); >>>
+            >>>
+            > he
             console.log(e);
             console.log(id + " " + body.substr(0, 32));
         }
@@ -177,71 +258,107 @@ exports.post = function(file, name, mail, body, time, subject, sign) {
 };
 
 function add(file, stamp, id, content) {
-    knex.transaction(function(trx) {
-        return co(function*() {
-            console.log("update:" + file + " " + stamp + " " + id + " " + content.substring(0, 16));
-            yield Promise.all([
-                trx("threads").where("file", file).update({ stamp: now(), laststamp: stamp, lastid: id, records: trx.raw("records + 1") }),
-                trx(file).insert({ stamp: stamp, id: id, content: content })
-            ]);
-            exports.update.emit('update', file, stamp, id, content);
-        });
-    });
-}
+    knex.transaction(function(trx) { <<
+                <<
+                << < HEAD
+                return co(function*() {
+                            console.log("update:" + file + " " + stamp + " " + id + " " + content.substring(0, 16));
+                            yield Promise.all([
+                                trx("threads").where("file", file).update({ stamp: now(), laststamp: stamp, lastid: id, records: trx.raw("records + 1") }),
+                                trx(file).insert({ stamp: stamp, id: id, content: content }) ===
+                                ===
+                                =
+                                return co(function*() {
+                                    yield trx.raw("LOCK TABLE " + ff(file) + " IN ACCESS EXCLUSIVE MODE;");
+                                    var rows = yield trx.select("stamp", "id").from(ff(file)).whereBetween("stamp", [stamp - aday, stamp + aday]).andWhere("id", id);
+                                    if (rows.length > 0) {
+                                        if (stamp !== rows[0].stamp) console.log("duplicate post!");
+                                        return;
+                                    }
+                                    exports.update.emit('update', file, stamp, id, content);
+                                    console.log("update:" + file + " " + stamp + " " + id + " " + content.substring(0, 16));
+                                    yield Promise.all([
+                                        trx("threads").where("file", file).update({ stamp: now(), laststamp: stamp, lastid: id, records: trx.raw("records + 1") }),
+                                        trx(ff(file)).insert({ stamp: stamp, id: id, content: content }) >>>
+                                        >>>
+                                        > he
+                                    ]);
+                                    exports.update.emit('update', file, stamp, id, content);
+                                });
+                            });
+                        }
 
-exports.addDate = function(rows) {
-    var time = "";
-    for (var i = 0; i < rows.length; i++) {
-        time = new Date(rows[i].stamp * 1000).toString();
-        rows[i].date = time.substring(0, time.lastIndexOf(" GMT"));
-    }
-    return rows;
-};
+                        exports.addDate = function(rows) {
+                            var time = "";
+                            for (var i = 0; i < rows.length; i++) {
+                                time = new Date(rows[i].stamp * 1000).toString();
+                                rows[i].date = time.substring(0, time.lastIndexOf(" GMT"));
+                            }
+                            return rows;
+                        };
 
-function conv(file) {
-    return function(row) {
-        var time = undefined;
-        if (row.stamp) {
-            time = new Date(row.stamp * 1000).toString();
-            time = time.substring(0, time.lastIndexOf(" GMT"));
-        }
-        const r = { date: time, id: row.id.substr(0, 8) };
-        const content = row.content.split("<>");
-        for (var j of content) {
-            var x = j.match(/^([a-z_]*):(.*)/);
-            if (x) r[x[1]] = x[2];
-        }
-        r.body = r.body || "";
-        r.body = escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>").replace(/&amp;/g, "&");
-        if (file && r.attach) r.body += "<br>http://" + exports.host + "/file/" + file + "/" + r.attach;
-        return r;
-    };
-}
-exports.conv = conv;
+                        function conv(file) {
+                            return function(row) {
+                                var time = undefined;
+                                if (row.stamp) {
+                                    time = new Date(row.stamp * 1000).toString();
+                                    time = time.substring(0, time.lastIndexOf(" GMT"));
+                                } <<
+                                <<
+                                << < HEAD
+                                const r = { date: time, id: row.id.substr(0, 8) };
+                                const content = row.content.split("<>");
+                                for (var j of content) {
+                                    var x = j.match(/^([a-z_]*):(.*)/);
+                                    if (x) r[x[1]] = x[2];
+                                }
+                                r.body = r.body || "";
+                                r.body = escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>").replace(/&amp;/g, "&");
+                                if (file && r.attach) r.body += "<br>http://" + exports.host + "/file/" + file + "/" + r.attach; ===
+                                ===
+                                =
+                                const r = { date: time, id: row.id.substr(0, 8) };
+                                const content = row.content.split("<>");
+                                for (var j of content) {
+                                    var x = j.match(/^([a-z_]*):(.*)/);
+                                    if (x) r[x[1]] = x[2];
+                                }
+                                r.body = r.body || "";
+                                r.body = escape(r.body.replace(/<br>/g, "\n")).replace(/\n/g, "<br>");
+                                if (file && r.attach) r.body += "<br>https://" + exports.host + "/file/" + file + "/" + r.attach; >>>
+                                >>>
+                                > he
+                                return r;
+                            };
+                        }
+                        exports.conv = conv;
 
-exports.notice = function(file, node) {
-    knex.select("file").from("unknown").where("file", file).then(function(rows) {
-        if (rows.length > 0) return;
-        const title = exports.getTitle(file);
-        exports.update.emit("notice", file, title, node);
-        return knex("unknown").insert({ node: node.replace(/\//g, "+"), file: file, title: title });
-    }).catch(function() {});
-};
-exports.unkownThreads = function() {
-    return knex.select().from("unknown").orderBy("id", "desc");
-};
+                        exports.notice = function(file, node) {
+                            knex.select("file").from("unknown").where("file", file).then(function(rows) {
+                                if (rows.length > 0) return;
+                                const title = exports.getTitle(file);
+                                exports.update.emit("notice", file, title, node);
+                                return knex("unknown").insert({ node: node.replace(/\//g, "+"), file: file, title: title });
+                            }).catch(function() {});
+                        }; exports.unkownThreads = function() {
+                            return knex.select().from("unknown").orderBy("id", "desc");
+                        };
 
-function threadFile(title) { return "thread_" + new Buffer(title).toString("hex").toUpperCase(); };
+                        function threadFile(title) { return "thread_" + new Buffer(title).toString("hex").toUpperCase(); };
 
-exports.getTitle = function(file) { return new Buffer(file.substring("thread_".length).toLowerCase(), "hex").toString(); };
+                        exports.getTitle = function(file) { return new Buffer(file.substring("thread_".length).toLowerCase(), "hex").toString(); };
 
-function now() { return Math.round(Date.now() / 1000); }
+                        function now() { return Math.round(Date.now() / 1000); }
 
-function times(time) {
-    const x = time.split("-");
-    var s = "stamp ";
-    if (x.length == 1) return s + "= " + (x[0] | 0);
-    if (x[1] == "") return s + ">= " + (x[0] | 0);
-    if (x[0] == "") return s + "<= " + (x[1] | 0);
-    return s + "between " + (x[0] | 0) + " and " + (x[1] | 0);
-}
+                        function times(time) {
+                            const x = time.split("-");
+                            var s = "stamp ";
+                            if (x.length == 1) return s + "= " + (x[0] | 0);
+                            if (x[1] == "") return s + ">= " + (x[0] | 0);
+                            if (x[0] == "") return s + "<= " + (x[1] | 0);
+                            return s + "between " + (x[0] | 0) + " and " + (x[1] | 0);
+                        }
+
+                        function ff(file, x) {
+                            return file.substr(0, x || 63).toLowerCase();
+                        }

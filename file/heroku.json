@@ -1,0 +1,24 @@
+{
+    "vistor": ".*",
+    "nodes": [
+        "node.shingetsu.info:8000/server.cgi",
+        "rep4649.ddo.jp:8000/server.cgi",
+        "opptape.iobb.net:8000/server.cgi"
+    ],
+    "friends": [],
+    "deny": [],
+    "host": "syake.herokuapp.com",
+    "port": 80,
+    "range": {
+        "node": 4,
+        "head": 7,
+        "newThread": 366,
+        "interval": 5
+    },
+    "image": false,
+    "update": true,
+    "db": {
+        "client": "pg",
+        "searchPath": "knex,public"
+    }
+}
